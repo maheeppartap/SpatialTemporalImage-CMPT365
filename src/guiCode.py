@@ -78,7 +78,7 @@ def videoBreakDown():
                 #print(i," " ,j , " ", k)
                 sti.sti[i][j][k] /= 255
 
-    cv2.imshow("test", sti.sti)
+    cv2.imshow("test",sti.sti)
     cv2.waitKey(25000)
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
