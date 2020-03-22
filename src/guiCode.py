@@ -18,6 +18,7 @@ from kivy.uix.boxlayout import BoxLayout
 
 
 # todo: make a decent filechooser
+# todo: Clean the code
 
 
 
@@ -74,6 +75,8 @@ Builder.load_string("""
     Button
         text: "open"
         on_release: my_widget.open(filechooser.path, filechooser.selection)
+        size: 75, 50
+        size_hint: None, None
     FileChooserIconView:
         id: filechooser
         on_selection: my_widget.selected(filechooser.selection)
@@ -101,7 +104,7 @@ class mainGUI(App):
 
     def build(self):
         global fileName
-        fileName= ""
+        fileName= "../assets/test2.mp4"
         parent = Builder.load_string(mainCanvasbg)
         # self.fileChooser = fileChooser = FileChooserListView(size_hint_y=None, path='../assets/')
 
