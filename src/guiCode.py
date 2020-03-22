@@ -1,65 +1,135 @@
-import tkinter as tk
-from tkinter import filedialog
-
 import cv2
+from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.videoplayer import VideoPlayer
 
 from STIclass import STI
-import numpy as np
 
 global tink  # the parent declaration
 global fileName
 global sti
-global videoPlayer
-global frameBG
+from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.widget import Widget
+from kivy.lang import Builder
+import os
+from kivy.uix.boxlayout import BoxLayout
+
+
+
+
+# todo: make a decent filechooser
+
+
+
+
+mainCanvasbg = """
+
+mainCanvas:
+
+    orientation: 'vertical'
+
+    canvas: 
+
+        Rectangle:
+
+            size: self.size
+
+            pos: self.pos
+            
+            source: '../assets/bg.png'
+"""
+
+fileChoosing = """
+
+<FileChooser>:
+
+    label:  label
+    
+    orientation:    'vertical'
+    
+    BoxLayout:
+    
+        FileChooserListView:
+            canvas.before:
+                Color:
+                    rgb:    .4, .5, .5
+                Rectangle:
+                    pos:    self.pos
+                    size:   self.size
+            on_selection:   root.select(*args)
+    Label:
+        id: label
+        size_hint_y:    .1
+        canvas.before:
+            Color:
+                rgb:    .5, .5, .4
+            Rectangle:
+                pos: self.pos
+                size:   self.size
+"""
+
+Builder.load_string("""
+<MyWidget>:
+    id: my_widget
+    Button
+        text: "open"
+        on_release: my_widget.open(filechooser.path, filechooser.selection)
+    FileChooserIconView:
+        id: filechooser
+        on_selection: my_widget.selected(filechooser.selection)
+""")
+
+
+class MyWidget(BoxLayout):
+    def open(self, path, filename):
+        with open(os.path.join(path, filename[0])) as f:
+            print(f.read())
+
+    def selected(self, filename):
+        global fileName
+        fileName = filename
+        print("selected: %s" % filename[0])
+
+
+class mainCanvas(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+#   add stuff here
+class mainGUI(App):
+
+    def build(self):
+        global fileName
+        fileName= ""
+        parent = Builder.load_string(mainCanvasbg)
+        # self.fileChooser = fileChooser = FileChooserListView(size_hint_y=None, path='../assets/')
+
+        player = VideoPlayer(source=fileName, state='play',
+                             options={'allow_stretch': True})
+        player.state = 'pause'
+        parent.add_widget(player)
+        parent.add_widget(MyWidget())
+        # parent.add_widget(self.fileChooser)
+
+        return parent
+        # return Label(text="hello")
+
 
 def begin():
-    global tink
-    global videoPlayer
-    global frameBG
-
-    tink = tk.Tk()  # the parent window
-
-    appRes = [500, 500] #for a 500x500 res
-
-
-    tink.title("test")
-    tink.geometry("%dx%d" % (appRes[0],appRes[1]))
-    bgName = tk.PhotoImage(file="../assets/bg.png")
-    frameBG = tk.Frame(tink, bg="white")
-    frameBG.place(relx=0,rely=0,relwidth=1,relheight=1)
-    backgroundIMG=tk.Label(frameBG, image=bgName)
-    backgroundIMG.place(relx=0,rely=0,relwidth=1,relheight=1)
-
-    # add widgets here
-    chooserButton = tk.Button(frameBG, text="Pick a file", width=25, command=fileselection, relief="ridge")
-    videoPlayer = tk.Label(frameBG,bg="black")
-    # this is for arrangement of widgets
-
-    chooserButton.place(relx=0.4,rely=0.75,relwidth=0.2,relheight=0.07)
-    videoPlayer.place(relx=0.15,rely=0.2,relwidth=0.7,relheight=0.5)
-    tink.protocol("WM_DELETE_WINDOW", onClosing)
-    w = tink.mainloop()
-
-
-# file selector.
-def fileselection():
-    tink.filename = filedialog.askopenfilename(initialdir="/", title="Select file")
     global fileName
-    fileName = tink.filename
-    videoBreakDown()
-    # print(tink.filename)
+    fileName = "../assets/test.mp4"
 
 
 def videoBreakDown():
-    global sti
-    global videoPlayer
-    global frameBG
-    windowname = "CMPT 365 Project"
+    global fileName
+    fileName = "../assets/test.mp4"
     vidCapture = cv2.VideoCapture(fileName)
-    if not vidCapture.isOpened():
-        print("Error opening the stream")
+    global sti
 
-    successful, image = vidCapture.read()
+    # Check if camera opened successfully
+    if (vidCapture.isOpened() == False):
+        print("Error opening video  file")
 
     width = vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH)
     height = vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -69,38 +139,33 @@ def videoBreakDown():
     print("video is: ", width, " ", height)
     print("Number of frames: ", length)
     sti = STI(width, length)
-    cv2.namedWindow(windowname)
-    cv2.startWindowThread()
 
-    middleCol = int(width / 2)
+    middlecol = int(width / 2)
 
-#########################################working here 18 march
-    while currFrame < length-1:
-        sti.addCol(currFrame, image[middleCol])
-        image_ = tk.PhotoImage(vidCapture.read()[1].all())#vidCapture.read()
-        x = image_
-        videoPlayer=tk.Label(frameBG,image=x)
-        videoPlayer.image = x
-        videoPlayer.place(relx=0.15, rely=0.2, relwidth=0.7, relheight=0.5)
-        #cv2.imshow(windowname, image_)
-        if cv2.waitKey(int(1000 / fps)) & 0xFF == ord('q'):
+    # Read until video is completed
+    while (vidCapture.isOpened()):
+
+        # Capture frame-by-frame
+        ret, frame = vidCapture.read()
+        if ret == True:
+            sti.addCol(currFrame, frame[middlecol])
+            currFrame += 1
+            # Display the resulting frame
+            # Press Q on keyboard to  exit
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+
+        # Break the loop
+        else:
             break
-        if cv2.getWindowProperty(windowname, 0) < 0:
-            break
-        currFrame += 1
-   # print(width)
 
     for i in range(int(width)):
         for j in range(int(length)):
             for k in range(3):
-                #print(i," " ,j , " ", k)
+                # print(i," " ,j , " ", k)
                 sti.sti[i][j][k] /= 255
 
-    cv2.imshow("test",sti.sti)
+    cv2.imshow("test", sti.sti)
     cv2.waitKey(25000)
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
-    onClosing()
-
-def onClosing():
-    tink.destroy()

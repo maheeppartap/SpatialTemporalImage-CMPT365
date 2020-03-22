@@ -7,9 +7,11 @@ from guiCode import *
 def main():
     print("Python version: " + str(sys.version))
     print("OpenCV version: " + str(cv2.__version__))
-
-    begin()
+    mainGUI().run()
+   # videoBreakDown()
 
 
 if __name__ == "__main__":
     main()
+
+
