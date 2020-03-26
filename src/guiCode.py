@@ -1,4 +1,5 @@
 import cv2
+from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.videoplayer import VideoPlayer
 
@@ -13,14 +14,11 @@ from kivy.uix.widget import Widget
 from kivy.lang import Builder
 import os
 from kivy.uix.boxlayout import BoxLayout
-
-
-
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 
 # todo: make a decent filechooser
 # todo: Clean the code
-
-
 
 
 mainCanvasbg = """
@@ -40,48 +38,6 @@ mainCanvas:
             source: '../assets/bg.png'
 """
 
-fileChoosing = """
-
-<FileChooser>:
-
-    label:  label
-    
-    orientation:    'vertical'
-    
-    BoxLayout:
-    
-        FileChooserListView:
-            canvas.before:
-                Color:
-                    rgb:    .4, .5, .5
-                Rectangle:
-                    pos:    self.pos
-                    size:   self.size
-            on_selection:   root.select(*args)
-    Label:
-        id: label
-        size_hint_y:    .1
-        canvas.before:
-            Color:
-                rgb:    .5, .5, .4
-            Rectangle:
-                pos: self.pos
-                size:   self.size
-"""
-
-Builder.load_string("""
-<MyWidget>:
-    id: my_widget
-    Button
-        text: "open"
-        on_release: my_widget.open(filechooser.path, filechooser.selection)
-        size: 75, 50
-        size_hint: None, None
-    FileChooserIconView:
-        id: filechooser
-        on_selection: my_widget.selected(filechooser.selection)
-""")
-
 
 class MyWidget(BoxLayout):
     def open(self, path, filename):
@@ -100,33 +56,64 @@ class mainCanvas(BoxLayout):
 
 
 #   add stuff here
+global player
+global currentFile
+
 class mainGUI(App):
 
     def build(self):
         global fileName
-        fileName= "../assets/test2.mp4"
+        global player
+        global currentFile
+        # fileName= "../assets/test2.mp4"
+        fileName=""
         parent = Builder.load_string(mainCanvasbg)
-        # self.fileChooser = fileChooser = FileChooserListView(size_hint_y=None, path='../assets/')
 
-        player = VideoPlayer(source=fileName, state='play',
-                             options={'allow_stretch': True})
-        player.state = 'pause'
+        player = VideoPlayer(state='pause',
+                             options={'allow_stretch': True}, disabled=True)
         parent.add_widget(player)
-        parent.add_widget(MyWidget())
+
+        fileChooser = Button(text="Choose a file", font_size=14, size=(2, 2),size_hint =(.2, .2),pos_hint = {"x":0.4})
+        fileChooser.bind(on_press=FileChooserCallback)
+        currentFile=Label(text="No file selected"+fileName, font_size=14, size=(2,2), size_hint=(.2,.2),pos_hint={"x":0.4} )
+
+        parent.add_widget(fileChooser)
+        parent.add_widget(currentFile)
         # parent.add_widget(self.fileChooser)
 
         return parent
         # return Label(text="hello")
 
 
-def begin():
+def FileChooserCallback(instance):
+    Tk().withdraw()
     global fileName
-    fileName = "../assets/test.mp4"
+    fileName = askopenfilename()
+    updateVideoPlayer(fileName)
+    updateLabel(fileName)
+
+def updateLabel(fname):
+    global currentFile
+    currentFile.text = fname
+
+def updateVideoPlayer(fname):
+    global player
+    global fileName
+
+    if fname.endswith('.avi'):
+        fileName=fname
+        player.source = fname
+        player.disabled=False
+        videoBreakDown()
+    else: print("Invalid file. We only support mp4 Files.")
+
+
+
 
 
 def videoBreakDown():
     global fileName
-    fileName = "../assets/test.mp4"
+
     vidCapture = cv2.VideoCapture(fileName)
     global sti
 
