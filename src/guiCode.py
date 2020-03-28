@@ -16,6 +16,9 @@ import os
 from kivy.uix.boxlayout import BoxLayout
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
+import threading
+
+
 
 # todo: make a decent filechooser
 # todo: Clean the code
@@ -58,6 +61,7 @@ class mainCanvas(BoxLayout):
 #   add stuff here
 global player
 global currentFile
+global videoBreakbtn
 
 class mainGUI(App):
 
@@ -65,19 +69,28 @@ class mainGUI(App):
         global fileName
         global player
         global currentFile
+        global videoBreakbtn
+        global sti
+
         # fileName= "../assets/test2.mp4"
         fileName=""
         parent = Builder.load_string(mainCanvasbg)
+
+
 
         player = VideoPlayer(state='pause',
                              options={'allow_stretch': True}, disabled=True)
         parent.add_widget(player)
 
-        fileChooser = Button(text="Choose a file", font_size=14, size=(2, 2),size_hint =(.2, .2),pos_hint = {"x":0.4})
+        fileChooser = Button(text="Choose a file", font_size=14, size=(2, 2),size_hint =(.2, .2),pos_hint = {"x":0.4, "y":0.9})
         fileChooser.bind(on_press=FileChooserCallback)
         currentFile=Label(text="No file selected"+fileName, font_size=14, size=(2,2), size_hint=(.2,.2),pos_hint={"x":0.4} )
 
+        videoBreakbtn = Button(text="show transition", font_size=14, size=(2, 2), size_hint=(.2, .2), pos_hint={"x": 0.4})
+        videoBreakbtn.bind(on_press=display)
+        videoBreakbtn.disabled=True
         parent.add_widget(fileChooser)
+        parent.add_widget(videoBreakbtn)
         parent.add_widget(currentFile)
         # parent.add_widget(self.fileChooser)
 
@@ -86,12 +99,20 @@ class mainGUI(App):
 
 
 
+def videoBreakDown_thread(instance = 1):
+    vbthread = threading.Thread(target=videoBreakDown)
+    vbthread.start()
+
 def FileChooserCallback(instance):
     Tk().withdraw()
     global fileName
+    global videoBreakbtn
+    videoBreakbtn.text="Loading..."
     fileName = askopenfilename()
     updateVideoPlayer(fileName)
     updateLabel(fileName)
+    videoBreakDown_thread()
+
 
 def updateLabel(fname):
     global currentFile
@@ -103,10 +124,6 @@ def updateVideoPlayer(fname):
     fileName=fname
     player.source = fname
     player.disabled=False
-    #videoBreakDown()
-
-
-
 
 
 
@@ -154,7 +171,18 @@ def videoBreakDown():
                 # print(i," " ,j , " ", k)
                 sti.sti[i][j][k] /= 255
 
-    cv2.imshow("test", sti.sti)
-    cv2.waitKey(25000)
+   # display()
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
+
+    global videoBreakbtn
+    videoBreakbtn.text="Show transition"
+    videoBreakbtn.disabled=False
+
+def display(instance = 0):
+    global sti
+    try:
+        cv2.imshow("test",sti.sti)
+        cv2.waitKey(0)
+    except:
+        pass
