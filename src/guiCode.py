@@ -85,6 +85,7 @@ class mainGUI(App):
         # return Label(text="hello")
 
 
+
 def FileChooserCallback(instance):
     Tk().withdraw()
     global fileName
@@ -99,11 +100,10 @@ def updateLabel(fname):
 def updateVideoPlayer(fname):
     global player
     global fileName
-
     fileName=fname
     player.source = fname
     player.disabled=False
-    videoBreakDown()
+    #videoBreakDown()
 
 
 
