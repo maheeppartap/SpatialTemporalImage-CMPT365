@@ -8,8 +8,9 @@ class STI:
 
     # adds a column at pos index for col STI. Default way.
     def addCol(self, pos, col):
+
         try:
-            self.sti[:, pos] = col[:]
+            self.sti[:, pos] = col
         except ValueError:
             print("Invalid column input.")
             traceback.print_exc()

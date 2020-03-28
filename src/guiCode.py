@@ -144,7 +144,7 @@ def videoBreakDown():
     currFrame = 0
     print("video is: ", width, " ", height)
     print("Number of frames: ", length)
-    sti = STI(width, length)
+    sti = STI(height, length)
 
     middlecol = int(width / 2)
 
@@ -154,7 +154,7 @@ def videoBreakDown():
         # Capture frame-by-frame
         ret, frame = vidCapture.read()
         if ret == True:
-            sti.addCol(currFrame, frame[middlecol])
+            sti.addCol(currFrame, frame[:, middlecol])
             currFrame += 1
             # Display the resulting frame
             # Press Q on keyboard to  exit
@@ -165,7 +165,7 @@ def videoBreakDown():
         else:
             break
 
-    for i in range(int(width)):
+    for i in range(int(height)):
         for j in range(int(length)):
             for k in range(3):
                 # print(i," " ,j , " ", k)
