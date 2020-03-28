@@ -100,12 +100,11 @@ def updateVideoPlayer(fname):
     global player
     global fileName
 
-    if fname.endswith('.avi'):
-        fileName=fname
-        player.source = fname
-        player.disabled=False
-        videoBreakDown()
-    else: print("Invalid file. We only support mp4 Files.")
+    fileName=fname
+    player.source = fname
+    player.disabled=False
+    videoBreakDown()
+
 
 
 
