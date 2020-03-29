@@ -3,7 +3,7 @@ from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.videoplayer import VideoPlayer
 
-from STIclass import STI
+from src.STIclass import STI
 
 global tink  # the parent declaration
 global fileName
