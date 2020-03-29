@@ -2,8 +2,9 @@ import numpy as np
 import traceback
 
 
-class STI:
+class STImg:
     def __init__(self, rows, cols, x=3):
+        # pycharm thinks this is dumb (I don't know what u doin tho so not gonna change it)
         self.sti = np.array([[[float(0), float(0), float(0)] for i in range(int(cols))] for j in range(int(rows))])
 
     # adds a column at pos index for col STI. Default way.

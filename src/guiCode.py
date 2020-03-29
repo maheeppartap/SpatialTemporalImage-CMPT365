@@ -3,7 +3,7 @@ from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.videoplayer import VideoPlayer
 
-from src.STIclass import STI
+from src.STImg import STImg
 
 global tink  # the parent declaration
 global fileName
@@ -144,7 +144,7 @@ def videoBreakDown():
     currFrame = 0
     print("video is: ", width, " ", height)
     print("Number of frames: ", length)
-    sti = STI(height, length)
+    sti = STImg(height, length)
 
     middlecol = int(width / 2)
 

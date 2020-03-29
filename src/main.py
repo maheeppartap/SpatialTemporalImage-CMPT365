@@ -1,6 +1,6 @@
 import sys
 
-from src.STIclass import STI
+from src.STImg import STImg
 from src.guiCode import *
 
 
