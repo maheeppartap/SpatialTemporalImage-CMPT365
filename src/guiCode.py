@@ -17,8 +17,7 @@ from kivy.uix.boxlayout import BoxLayout
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 import threading
-
-
+from kivy.uix.checkbox import CheckBox
 
 # todo: make a decent filechooser
 # todo: Clean the code
@@ -62,6 +61,10 @@ class mainCanvas(BoxLayout):
 global player
 global currentFile
 global videoBreakbtn
+global checkBox1
+global checkBox2
+global activeSTIstring
+
 
 class mainGUI(App):
 
@@ -71,26 +74,41 @@ class mainGUI(App):
         global currentFile
         global videoBreakbtn
         global sti
+        global checkBox1
+        global checkBox2
 
         # fileName= "../assets/test2.mp4"
-        fileName=""
+        fileName = ""
         parent = Builder.load_string(mainCanvasbg)
-
-
 
         player = VideoPlayer(state='pause',
                              options={'allow_stretch': True}, disabled=True)
         parent.add_widget(player)
 
-        fileChooser = Button(text="Choose a file", font_size=14, size=(2, 2),size_hint =(.2, .2),pos_hint = {"x":0.4, "y":0.9})
+        fileChooser = Button(text="Choose a file", font_size=14, size=(2, 2), size_hint=(.2, .2),
+                             pos_hint={"x": 0.4, "y": 0.9})
         fileChooser.bind(on_press=FileChooserCallback)
-        currentFile=Label(text="No file selected"+fileName, font_size=14, size=(2,2), size_hint=(.2,.2),pos_hint={"x":0.4} )
+        currentFile = Label(text="No file selected" + fileName, font_size=14, size=(2, 2), size_hint=(.2, .2),
+                            pos_hint={"x": 0.4})
 
-        videoBreakbtn = Button(text="show transition", font_size=14, size=(2, 2), size_hint=(.2, .2), pos_hint={"x": 0.4})
+        videoBreakbtn = Button(text="show transition", font_size=14, size=(2, 2), size_hint=(.2, .2),
+                               pos_hint={"x": 0.4})
         videoBreakbtn.bind(on_press=display)
-        videoBreakbtn.disabled=True
+        videoBreakbtn.disabled = True
+
+        colLablel = Label(text="Column STI", size_hint=(.05, .05), pos_hint={"x": 0.1})
+        rowLablel = Label(text="row STI", size_hint=(.05, .05), pos_hint={"x": 0.1})
+        checkBox1 = CheckBox(active=True, size_hint=(.05, .05), pos_hint={"x": 0.1})
+        checkBox1.bind(active=activeSTI)
+        checkBox2 = CheckBox(active=False, size_hint=(.05, .05), pos_hint={"x": 0.1})
+        checkBox2.bind(active=activeSTI)
+
         parent.add_widget(fileChooser)
+        parent.add_widget(colLablel)
+        parent.add_widget(checkBox1)
         parent.add_widget(videoBreakbtn)
+        parent.add_widget(rowLablel)
+        parent.add_widget(checkBox2)
         parent.add_widget(currentFile)
         # parent.add_widget(self.fileChooser)
 
@@ -98,16 +116,33 @@ class mainGUI(App):
         # return Label(text="hello")
 
 
+def activeSTI(instance, isActive):
+    global activeSTIstring
+    global checkBox1
+    global checkBox2
+    if isActive:
+        activeSTIstring = instance
+        if instance is checkBox1:
+            checkBox2.active = False
+        else:
+            checkBox1.active = False
+    else:
+        if instance is checkBox1:
+            checkBox2.active = True
+        else:
+            checkBox1.active = True
 
-def videoBreakDown_thread(instance = 1):
+
+def videoBreakDown_thread(instance=1):
     vbthread = threading.Thread(target=videoBreakDown)
     vbthread.start()
+
 
 def FileChooserCallback(instance):
     Tk().withdraw()
     global fileName
     global videoBreakbtn
-    videoBreakbtn.text="Loading..."
+    videoBreakbtn.text = "Loading..."
     fileName = askopenfilename()
     updateVideoPlayer(fileName)
     updateLabel(fileName)
@@ -118,13 +153,16 @@ def updateLabel(fname):
     global currentFile
     currentFile.text = fname
 
+
 def updateVideoPlayer(fname):
     global player
     global fileName
-    fileName=fname
+    fileName = fname
     player.source = fname
-    player.disabled=False
+    player.disabled = False
 
+
+global sti_r
 
 
 def videoBreakDown():
@@ -132,7 +170,7 @@ def videoBreakDown():
 
     vidCapture = cv2.VideoCapture(fileName)
     global sti
-
+    global sti_r
     # Check if camera opened successfully
     if (vidCapture.isOpened() == False):
         print("Error opening video  file")
@@ -145,7 +183,9 @@ def videoBreakDown():
     print("video is: ", width, " ", height)
     print("Number of frames: ", length)
     sti = STImg(height, length)
+    sti_r = STImg(width, length)
 
+    middleRow = int(height / 2)
     middlecol = int(width / 2)
 
     # Read until video is completed
@@ -155,6 +195,7 @@ def videoBreakDown():
         ret, frame = vidCapture.read()
         if ret == True:
             sti.addCol(currFrame, frame[:, middlecol])
+            sti_r.addRow(currFrame, frame[middleRow, :])
             currFrame += 1
             # Display the resulting frame
             # Press Q on keyboard to  exit
@@ -171,18 +212,34 @@ def videoBreakDown():
                 # print(i," " ,j , " ", k)
                 sti.sti[i][j][k] /= 255
 
-   # display()
+    # todo: something is wrong with this this normalizing function, fix
+    for t in range(int(height)):
+        for l in range(int(length)):
+            for m in range(3):
+                sti_r.sti[t][l][m] /= 255
+
+    # display()
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
 
     global videoBreakbtn
-    videoBreakbtn.text="Show transition"
-    videoBreakbtn.disabled=False
+    videoBreakbtn.text = "Show transition"
+    videoBreakbtn.disabled = False
 
-def display(instance = 0):
+
+def display(instance=0):
     global sti
-    try:
-        cv2.imshow("test",sti.sti)
-        cv2.waitKey(0)
-    except:
-        pass
+    global checkBox1
+
+    if checkBox1.active:
+        try:
+            cv2.imshow("test", sti.sti)
+            cv2.waitKey(0)
+        except:
+            pass
+    else:
+        try:
+            cv2.imshow("test", sti_r.sti)
+            cv2.waitKey(0)
+        except:
+            pass

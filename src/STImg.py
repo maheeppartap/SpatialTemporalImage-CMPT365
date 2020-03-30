@@ -23,7 +23,7 @@ class STImg:
     # adds a row for row STI. Could use, but meh.
     def addRow(self, pos, row):
         try:
-            self.sti[pos] = row
+            self.sti[:, pos] = row
         except ValueError:
             print("Invalid row input.")
             traceback.print_exc()
