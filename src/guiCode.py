@@ -212,8 +212,7 @@ def videoBreakDown():
                 # print(i," " ,j , " ", k)
                 sti.sti[i][j][k] /= 255
 
-    # todo: something is wrong with this this normalizing function, fix
-    for t in range(int(height)):
+    for t in range(int(width)):
         for l in range(int(length)):
             for m in range(3):
                 sti_r.sti[t][l][m] /= 255
