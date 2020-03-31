@@ -8,9 +8,12 @@ from src.STImg import STImg
 
 
 class TransitionDetector:
-    def __init__(self, vertSTI: STImg, horSTI: STImg):
-        self.vertSTI = vertSTI
-        self.horSTI = horSTI
+    def __init__(self, colSTI: STImg, rowSTI: STImg):
+        self.colSTI = colSTI
+        self.rowSTI = rowSTI
+
+    def do_da_ting(self):
+        print(self.rowSTI.sti)
 
     def hor_trans_points(self):
         pass

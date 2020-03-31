@@ -4,6 +4,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.videoplayer import VideoPlayer
 
 from src.STImg import STImg
+from src.TransitionDetector import TransitionDetector
 
 global tink  # the parent declaration
 global fileName
@@ -230,6 +231,9 @@ def display(instance=0):
     global sti
     global checkBox1
 
+    #td = TransitionDetector(sti, sti_r)
+
+
     if checkBox1.active:
         try:
             cv2.imshow("test", sti.sti)
@@ -242,3 +246,4 @@ def display(instance=0):
             cv2.waitKey(0)
         except:
             pass
+
