@@ -11,12 +11,14 @@ class TransitionDetector:
     def __init__(self, colSTI: STImg, rowSTI: STImg):
         self.colSTI = colSTI
         self.rowSTI = rowSTI
+        self.colhist = colSTI.histogram()
+        self.rowhist = rowSTI.histogram()
 
     def do_da_ting(self):
-        print(self.rowSTI.sti)
+        self._hor_trans_points()
 
-    def hor_trans_points(self):
+    def _hor_trans_points(self):
         pass
 
-    def vert_trans_points(self):
+    def _vert_trans_points(self):
         pass

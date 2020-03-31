@@ -231,8 +231,8 @@ def display(instance=0):
     global sti
     global checkBox1
 
-    #td = TransitionDetector(sti, sti_r)
-
+    td = TransitionDetector(sti, sti_r)
+    td.do_da_ting()
 
     if checkBox1.active:
         try:
