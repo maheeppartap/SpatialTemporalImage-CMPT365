@@ -1,4 +1,6 @@
 from src.STImg import STImg
+import numpy as np
+
 
 # OK so basically, when there is a cut, vert wipe, or hor wipe
 # One of the the STI's will have an immediate change, and the other may or may not.
@@ -11,14 +13,26 @@ class TransitionDetector:
     def __init__(self, colSTI: STImg, rowSTI: STImg):
         self.colSTI = colSTI
         self.rowSTI = rowSTI
-        self.colhist = colSTI.histogram()
-        self.rowhist = rowSTI.histogram()
 
     def do_da_ting(self):
-        self._hor_trans_points()
+        colt = self._detect_transitions(self.colSTI)
+        rowt = self._detect_transitions(self.rowSTI)
+        print(colt)
+        print(rowt)
 
-    def _hor_trans_points(self):
-        pass
-
-    def _vert_trans_points(self):
-        pass
+    @staticmethod
+    def _detect_transitions(STI: STImg):
+        frames = STI.frames
+        rows = STI.rows
+        n = STI.N
+        hists = STI.histograms()
+        trans = []
+        for i in range(frames - 1):
+            diff = 0
+            for x in range(n):
+                for y in range(n):
+                    diff += min(hists[i][x][y], hists[i + 1][x][y])
+            diff /= rows
+            if diff < 0.5:
+                trans.append(i)
+        return trans

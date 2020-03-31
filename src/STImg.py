@@ -5,14 +5,14 @@ import traceback
 class STImg:
     # rows of an sti represents the # of rows or cols in the videos dimentions
     # cols represents the # frames in the video
-    def __init__(self, rows, cols):
+    def __init__(self, rows, frames):
 
         # made this make more sense
         self.rows = int(rows)
-        self.cols = int(cols)
-        self.sti = np.zeros((self.rows, self.cols, 3))
+        self.frames = int(frames)
+        self.sti = np.zeros((self.rows, self.frames, 3))
         self.N = 1 + int(np.floor(np.log2(self.rows)))
-        self.hists = np.zeros((self.cols, self.N, self.N))
+        self.hists = np.zeros((self.frames, self.N, self.N), int)
         self.generated = False
 
     # adds a column at pos index for col STI. Default way.
@@ -41,7 +41,7 @@ class STImg:
     def _generate_hists(self):
         self.generated = True
         for i in range(self.rows):
-            for j in range(self.cols):
+            for j in range(self.frames):
                 sum = self.sti[i][j][0] + self.sti[i][j][1] + self.sti[i][j][2]
                 if sum == 0:
                     r = 0
@@ -54,7 +54,7 @@ class STImg:
                 gN = int(np.floor(g * (self.N-1)))
                 self.hists[j][rN][gN] += 1
 
-    def histogram(self):
+    def histograms(self):
         if not self.generated:
             self._generate_hists()
         return self.hists
