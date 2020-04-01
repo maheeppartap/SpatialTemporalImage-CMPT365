@@ -299,13 +299,13 @@ def display(instance=0):
 
     if checkBox1.active:
         try:
-            cv2.imshow("test", rowsti)
+            cv2.imshow("test", colsti)
             cv2.waitKey(0)
         except:
             pass
     else:
         try:
-            cv2.imshow("test", colsti)
+            cv2.imshow("test", rowsti)
             cv2.waitKey(0)
         except:
             pass
