@@ -24,8 +24,8 @@ class STImg:
             traceback.print_exc()
 
     # todo: use this to add individual elements to make a diagonal STI
-    def addSingleElements(self, position, num):
-        pass  # only for compiling purpose
+    def addSingleElements(self, x, y, num):
+        self.sti[x, y, :] = num
 
     # adds a row for row STI. Could use, but meh.
     def addRow(self, pos, row):
