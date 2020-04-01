@@ -19,6 +19,7 @@ from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 import threading
 from kivy.uix.checkbox import CheckBox
+import numpy as np
 
 # todo: make a decent filechooser
 # todo: Clean the code
@@ -65,7 +66,8 @@ global videoBreakbtn
 global checkBox1
 global checkBox2
 global activeSTIstring
-
+global rowsti
+global colsti
 
 class mainGUI(App):
 
@@ -74,7 +76,6 @@ class mainGUI(App):
         global player
         global currentFile
         global videoBreakbtn
-        global sti
         global checkBox1
         global checkBox2
 
@@ -163,60 +164,86 @@ def updateVideoPlayer(fname):
     player.disabled = False
 
 
-global sti_r
-
-
 def videoBreakDown():
     global fileName
-
+    global colsti
+    global rowsti
     vidCapture = cv2.VideoCapture(fileName)
-    global sti
-    global sti_r
     # Check if camera opened successfully
-    if (vidCapture.isOpened() == False):
+    if not vidCapture.isOpened():
         print("Error opening video  file")
 
-    width = vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH)
-    height = vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    width = int(vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
     length = int(vidCapture.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = vidCapture.get(cv2.CAP_PROP_FPS)
-    currFrame = 0
-    print("video is: ", width, " ", height)
-    print("Number of frames: ", length)
-    sti = STImg(height, length)
-    sti_r = STImg(width, length)
+    index = 0
+    N = int(1 + np.log2(height))
 
-    middleRow = int(height / 2)
-    middlecol = int(width / 2)
-
+    prevcolhists = np.full((width, N, N), width + 1, dtype=int)
+    prevrowhists = np.full((height, N, N), height + 1, dtype=int)
+    colhists = np.zeros((width, N, N), int)
+    rowhists = np.zeros((height, N, N), int)
+    colsti = np.empty((width, length), dtype=float)
+    rowsti = np.empty((height, length), dtype=float)
+    thresh = 0.5
     # Read until video is completed
-    while (vidCapture.isOpened()):
+    while vidCapture.isOpened():
 
         # Capture frame-by-frame
         ret, frame = vidCapture.read()
-        if ret == True:
-            sti.addCol(currFrame, frame[:, middlecol])
-            sti_r.addRow(currFrame, frame[middleRow, :])
-            currFrame += 1
+        if ret:
+            # create a histogram for every row and column in the given frame
+            for i in range(height):
+                for j in range(width):
+                    # convert to chromaticity
+                    total = np.sum(frame[i][j])
+                    if total == 0:
+                        r = 0
+                        g = 0
+                    else:
+                        r = frame[i][j][0] / total
+                        g = frame[i][j][1] / total
+                    # quantize chromaticity
+                    rN = int(np.floor(r * (N - 1)))
+                    gN = int(np.floor(g * (N - 1)))
+                    if rN == 7 or gN == 7:
+                        print(str(frame[i][j]))
+                        print(str(r) + " " + str(g))
+                    colhists[j][rN][gN] += 1
+                    rowhists[i][rN][gN] += 1
+
+            # create a column of our column sti
+            for i in range(width):
+                diff = 0
+                for j in range(N):
+                    for k in range(N):
+                        diff += min(prevcolhists[i][j][k], colhists[i][j][k])
+                        # reset for next loop since we are done with it
+                        prevcolhists[i][j][k] = colhists[i][j][k]
+                        colhists[i][j][k] = 0
+                diff /= height
+                colsti[i][index] = diff > thresh
+
+            for i in range(height):
+                diff = 0
+                for j in range(N):
+                    for k in range(N):
+                        diff += min(prevrowhists[i][j][k], rowhists[i][j][k])
+                        # reset for next loop since we are done with it
+                        prevrowhists[i][j][k] = rowhists[i][j][k]
+                        rowhists[i][j][k] = 0
+                diff /= width
+                rowsti[i][index] = diff > thresh
+
+            index += 1
             # Display the resulting frame
             # Press Q on keyboard to  exit
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 break
-
         # Break the loop
         else:
             break
-
-    for i in range(int(height)):
-        for j in range(int(length)):
-            for k in range(3):
-                # print(i," " ,j , " ", k)
-                sti.sti[i][j][k] /= 255
-
-    for t in range(int(width)):
-        for l in range(int(length)):
-            for m in range(3):
-                sti_r.sti[t][l][m] /= 255
 
     # display()
     vidCapture.release()
@@ -228,21 +255,19 @@ def videoBreakDown():
 
 
 def display(instance=0):
-    global sti
+    global rowsti
+    global colsti
     global checkBox1
-
-    td = TransitionDetector(sti, sti_r)
-    td.do_da_ting()
 
     if checkBox1.active:
         try:
-            cv2.imshow("test", sti.sti)
+            cv2.imshow("test", rowsti)
             cv2.waitKey(0)
         except:
             pass
     else:
         try:
-            cv2.imshow("test", sti_r.sti)
+            cv2.imshow("test", colsti)
             cv2.waitKey(0)
         except:
             pass
