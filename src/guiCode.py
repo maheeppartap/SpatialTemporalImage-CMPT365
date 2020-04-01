@@ -168,8 +168,8 @@ global sti_r
 
 
 ########################
-def test(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def analyze_sti(img):
+    gray = img.copy()
 
     kernel_size = 5
     blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
@@ -192,10 +192,10 @@ def test(img):
                 cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
 
         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
-        cv2.imshow("test", lines_edges)
+        cv2.imshow("detected transition", lines_edges)
     else:
         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
-        cv2.imshow("test", lines_edges)
+        cv2.imshow("detected transition", lines_edges)
 
     cv2.waitKey(0)
 
@@ -222,8 +222,8 @@ def videoBreakDown():
     prevrowhists = np.full((height, N, N), height + 1, dtype=int)
     colhists = np.zeros((width, N, N), int)
     rowhists = np.zeros((height, N, N), int)
-    colsti = np.empty((width, length), dtype=float)
-    rowsti = np.empty((height, length), dtype=float)
+    colsti = np.empty((width, length), dtype=np.uint8)
+    rowsti = np.empty((height, length), dtype=np.uint8)
     thresh = 0.5
     # Read until video is completed
     while vidCapture.isOpened():
@@ -261,7 +261,7 @@ def videoBreakDown():
                         prevcolhists[i][j][k] = colhists[i][j][k]
                         colhists[i][j][k] = 0
                 diff /= height
-                colsti[i][index] = diff > thresh
+                colsti[i][index] = (diff > thresh)*255
 
             for i in range(height):
                 diff = 0
@@ -272,7 +272,7 @@ def videoBreakDown():
                         prevrowhists[i][j][k] = rowhists[i][j][k]
                         rowhists[i][j][k] = 0
                 diff /= width
-                rowsti[i][index] = diff > thresh
+                rowsti[i][index] = (diff > thresh)*255
 
             index += 1
             # Display the resulting frame
@@ -296,16 +296,16 @@ def display(instance=0):
     global rowsti
     global colsti
     global checkBox1
-
+    analyze_sti(colsti)
     if checkBox1.active:
         try:
-            cv2.imshow("test", colsti)
+            cv2.imshow("test", colsti/255)
             cv2.waitKey(0)
         except:
             pass
     else:
         try:
-            cv2.imshow("test", rowsti)
+            cv2.imshow("test", rowsti/255)
             cv2.waitKey(0)
         except:
             pass
