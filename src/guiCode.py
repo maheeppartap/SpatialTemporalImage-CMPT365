@@ -3,7 +3,7 @@ import numpy as np
 from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.videoplayer import VideoPlayer
-
+import math
 from src.STImg import STImg
 from src.TransitionDetector import TransitionDetector
 
@@ -166,9 +166,13 @@ def updateVideoPlayer(fname):
 
 global sti_r
 
+global detectedSTItransition
+
 
 ########################
 def analyze_sti(img):
+    global detectedSTItransition
+    detectedSTItransition = np.zeros(2,dtype="float")
     gray = img.copy()
 
     kernel_size = 5
@@ -179,17 +183,45 @@ def analyze_sti(img):
 
     rho = 1
     theta = np.pi / 180
-    threshold = 43
+    threshold = 4   # seems like a sweet spot
     min_line_length = 50
-    max_line_gap = 20
+    max_line_gap = 2
     line_image = np.copy(img) * 0
 
-    lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
-                            min_line_length, max_line_gap)
+    lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                             min_line_length, max_line_gap)
+    lines = np.copy(lines_)
+
+    k = 0
+    slope = np.zeros(len(lines))
+    length = np.zeros(len(lines))
+    if type(lines) is np.ndarray:
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                slope[k] = float((y2 - y1) / (x2 - x1))
+                length[k] = math.hypot(x1 - x2, y1 - y2)
+                k += 1
+
+    length.sort(kind='quicksort')
+
+    # checking for similar slope to reduce copies.
+    wiggleRoom = 0.1
+    for m in range(0, len(lines) - 1):
+        if slope[m] - slope[m + 1] > wiggleRoom:
+            lines = np.delete(lines, (m, 0), axis=0)
+
+    print("holaaaa: " ,lines[len(lines)-1][0][0])
+
+    detectedSTItransition[0] = lines[len(lines)-1][0][0]
+    detectedSTItransition[1] = lines[len(lines)-1][0][2]
+
+    print(detectedSTItransition)
     if type(lines) is np.ndarray:
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+
+        #print(lines)
 
         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
         cv2.imshow("detected transition", lines_edges)
@@ -261,7 +293,7 @@ def videoBreakDown():
                         prevcolhists[i][j][k] = colhists[i][j][k]
                         colhists[i][j][k] = 0
                 diff /= height
-                colsti[i][index] = (diff > thresh)*255
+                colsti[i][index] = (diff > thresh) * 255
 
             for i in range(height):
                 diff = 0
@@ -272,7 +304,7 @@ def videoBreakDown():
                         prevrowhists[i][j][k] = rowhists[i][j][k]
                         rowhists[i][j][k] = 0
                 diff /= width
-                rowsti[i][index] = (diff > thresh)*255
+                rowsti[i][index] = (diff > thresh) * 255
 
             index += 1
             # Display the resulting frame
@@ -296,17 +328,18 @@ def display(instance=0):
     global rowsti
     global colsti
     global checkBox1
-    analyze_sti(colsti)
+
     if checkBox1.active:
         try:
-            cv2.imshow("test", colsti/255)
+            analyze_sti(colsti)
+            cv2.imshow("test", colsti / 255)
             cv2.waitKey(0)
         except:
             pass
     else:
         try:
-            cv2.imshow("test", rowsti/255)
+            analyze_sti(rowsti)
+            cv2.imshow("test", rowsti / 255)
             cv2.waitKey(0)
         except:
             pass
-
