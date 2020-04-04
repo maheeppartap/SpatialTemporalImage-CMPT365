@@ -1,10 +1,14 @@
 import cv2
 import numpy as np
+import math
+import os
 
 
 class VideoAnalysis:
 
     def __init__(self, filename, thresh=0.7, size=64):
+        self.detectedSTItransition = np.zeros(2, dtype="float")
+        self.detectedSTItransition2 = np.zeros(2, dtype="float")
         self.filename = filename
         vidCapture = cv2.VideoCapture(filename)
         # Check if camera opened successfully
@@ -74,8 +78,8 @@ class VideoAnalysis:
                         gN = int(np.floor(g * (N - 1)))
                         if rN == 7 or gN == 7:
                             pass
-                         #   print(str(frame[i][j]))
-                          #  print(str(r) + " " + str(g))
+                        #   print(str(frame[i][j]))
+                        #  print(str(r) + " " + str(g))
                         colhists[j][rN][gN] += 1
                         rowhists[i][rN][gN] += 1
 
@@ -100,16 +104,106 @@ class VideoAnalysis:
         vidCapture.release()
         cv2.destroyAllWindows()  # just to be safe
 
-    # VERY IMPORTANT, this function also resets the histogram for next loop
-    # NOT SAFE
+
+# VERY IMPORTANT, this function also resets the histogram for next loop
+# NOT SAFE
     @staticmethod
     def histogram_intersection(total, N, prevhist, hist):
         diff = 0
         for j in range(N):
             for k in range(N):
                 diff += min(prevhist[j][k], hist[j][k])
-                # reset for next loop since we are done with it
+            # reset for next loop since we are done with it
                 prevhist[j][k] = hist[j][k]
                 hist[j][k] = 0
         diff /= total
         return diff
+
+    def analyze_sti(self, c=1):
+        if c:
+            img = self.colsti
+        else:
+            img = self.rowsti
+
+        self.detectedSTItransition = np.zeros(2, dtype="float")
+        cv2.imwrite("temp.png", img)
+        img = cv2.imread("temp.png")
+        gray = img.copy()
+
+        kernel_size = 5
+        blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
+        low_threshold = 50
+        high_threshold = 100
+        edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+
+        rho = 1
+        theta = np.pi / 180
+        threshold = 20  # seems like a sweet spot
+        min_line_length = 50
+        max_line_gap = 2
+        line_image = np.copy(img) * 0
+
+        lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                                 min_line_length, max_line_gap)
+
+        lines = np.copy(lines_)
+
+        k = 0
+        slope = np.zeros(len(lines))
+        length = np.zeros(len(lines))
+        if type(lines) is np.ndarray:
+            for line in lines:
+                for x1, y1, x2, y2 in line:
+                    slope[k] = float((y2 - y1) / (x2 - x1))
+                    length[k] = math.hypot(x1 - x2, y1 - y2)
+                    k += 1
+
+        length.sort(kind='quicksort')
+
+        # checking for similar slope to reduce copies.
+        wiggleRoom = 0.1
+        for m in range(0, len(lines) - 1):
+            if slope[m] - slope[m + 1] > wiggleRoom:
+                lines = np.delete(lines, (m, 0), axis=0)
+
+        self.detectedSTItransition[0] = lines[len(lines) - 1][0][0]
+        self.detectedSTItransition[1] = lines[len(lines) - 1][0][2]
+        print(self.detectedSTItransition)
+        if type(lines) is np.ndarray:
+            for line in lines:
+                for x1, y1, x2, y2 in line:
+                    cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+
+            # print(lines)
+
+            self.lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
+            cv2.imshow("detected transition", self.lines_edges)
+        else:
+            self.lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
+            cv2.imshow("detected transition", self.lines_edges)
+
+        os.remove("temp.png")
+
+        self.typeOfTransition(slope[len(slope) - 1], c)
+
+        cv2.waitKey(0)
+
+    def typeOfTransition(self, c, x=0):
+        if x is 0:
+            return
+        type = ""
+        theta = math.atan(x)
+        print(theta)
+        tol = 0.0001
+        if theta > 0:
+            if c:
+                type = "lr"
+            else:
+                type = "ud"
+        else:
+            if theta < 0:
+                if c:
+                    type = "rl"
+                else:
+                    type = "du"
+        print("type is: ", type)
