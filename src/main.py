@@ -9,6 +9,8 @@ from src.guiCode import *
 def main():
     print("Python version: " + str(sys.version))
     print("OpenCV version: " + str(cv2.__version__))
+    #xx = cv2.imread("Colsti.png")
+    #analyze_sti(xx)
     mainGUI().run()
     # videoBreakDown()
 

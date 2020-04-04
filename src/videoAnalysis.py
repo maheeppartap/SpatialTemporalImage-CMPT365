@@ -73,8 +73,9 @@ class VideoAnalysis:
                         rN = int(np.floor(r * (N - 1)))
                         gN = int(np.floor(g * (N - 1)))
                         if rN == 7 or gN == 7:
-                            print(str(frame[i][j]))
-                            print(str(r) + " " + str(g))
+                            pass
+                         #   print(str(frame[i][j]))
+                          #  print(str(r) + " " + str(g))
                         colhists[j][rN][gN] += 1
                         rowhists[i][rN][gN] += 1
 

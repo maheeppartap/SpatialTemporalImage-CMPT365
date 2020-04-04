@@ -5,6 +5,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.videoplayer import VideoPlayer
 import math
 from src.videoAnalysis import VideoAnalysis
+
 global tink  # the parent declaration
 global fileName
 global sti
@@ -172,29 +173,33 @@ def updateVideoPlayer(fname):
     player.source = fname
     player.disabled = False
 
+
 global detectedSTItransition
 
-########################
+
 def analyze_sti(img):
     global detectedSTItransition
     detectedSTItransition = np.zeros(2, dtype="float")
+    cv2.imwrite("temp.png", img)
+    img = cv2.imread("temp.png")
     gray = img.copy()
 
     kernel_size = 5
     blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
     low_threshold = 50
-    high_threshold = 150
+    high_threshold = 100
     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
 
     rho = 1
     theta = np.pi / 180
-    threshold = 4   # seems like a sweet spot
+    threshold = 20  # seems like a sweet spot
     min_line_length = 50
     max_line_gap = 2
     line_image = np.copy(img) * 0
 
     lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                              min_line_length, max_line_gap)
+
     lines = np.copy(lines_)
 
     k = 0
@@ -215,18 +220,15 @@ def analyze_sti(img):
         if slope[m] - slope[m + 1] > wiggleRoom:
             lines = np.delete(lines, (m, 0), axis=0)
 
-    print("holaaaa: ", lines[len(lines)-1][0][0])
-
-    detectedSTItransition[0] = lines[len(lines)-1][0][0]
-    detectedSTItransition[1] = lines[len(lines)-1][0][2]
-
+    detectedSTItransition[0] = lines[len(lines) - 1][0][0]
+    detectedSTItransition[1] = lines[len(lines) - 1][0][2]
     print(detectedSTItransition)
     if type(lines) is np.ndarray:
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
 
-        #print(lines)
+        # print(lines)
 
         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
         cv2.imshow("detected transition", lines_edges)
@@ -234,7 +236,31 @@ def analyze_sti(img):
         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
         cv2.imshow("detected transition", lines_edges)
 
+    os.remove("temp.png")
+
+    typeOfTransition(slope[len(slope)-1])
+
     cv2.waitKey(0)
+
+def typeOfTransition(x=0):
+    if x is 0:
+        return
+    type = ""
+    theta = math.atan(x)
+    print(theta)
+    tol = 0.0001
+    if (theta ) > 0:
+        if checkBox1.active:
+            type = "lr"
+        else:
+            type = "ud"
+    else:
+        if(theta ) < 0:
+            if checkBox1.active:
+                type = "rl"
+            else:
+                type = "du"
+    print("type is: ", type)
 
 
 #########################
@@ -246,15 +272,15 @@ def display(instance=0):
 
     if checkBox1.active:
         try:
-            # analyze_sti(colsti)
             cv2.imshow("test", colsti / 255)
+            analyze_sti(colsti)
             cv2.waitKey(0)
         except:
             pass
     else:
         try:
-            # analyze_sti(rowsti)
             cv2.imshow("test", rowsti / 255)
+            analyze_sti(rowsti)
             cv2.waitKey(0)
         except:
             pass
