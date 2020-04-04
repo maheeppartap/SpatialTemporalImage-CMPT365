@@ -177,7 +177,7 @@ global detectedSTItransition
 ########################
 def analyze_sti(img):
     global detectedSTItransition
-    detectedSTItransition = np.zeros(2,dtype="float")
+    detectedSTItransition = np.zeros(2, dtype="float")
     gray = img.copy()
 
     kernel_size = 5
@@ -246,14 +246,14 @@ def display(instance=0):
 
     if checkBox1.active:
         try:
-            analyze_sti(colsti)
+            # analyze_sti(colsti)
             cv2.imshow("test", colsti / 255)
             cv2.waitKey(0)
         except:
             pass
     else:
         try:
-            analyze_sti(rowsti)
+            # analyze_sti(rowsti)
             cv2.imshow("test", rowsti / 255)
             cv2.waitKey(0)
         except:

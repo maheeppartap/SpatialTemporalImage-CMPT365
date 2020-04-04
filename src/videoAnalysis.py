@@ -4,15 +4,16 @@ import numpy as np
 
 class VideoAnalysis:
 
-    def __init__(self, filename):
+    def __init__(self, filename, thresh=0.7, size=64):
         self.filename = filename
         vidCapture = cv2.VideoCapture(filename)
         # Check if camera opened successfully
         if not vidCapture.isOpened():
             print("Error opening video  file")
 
+        self.thresh = thresh
         self.width = -1
-        self.height = -1
+        self.height = size
         self.length = -1
         self.rowsti = None
         self.colsti = None
@@ -22,16 +23,21 @@ class VideoAnalysis:
         complete_callback(self)
 
     def breakdowntoSTI(self):
+
         vidCapture = cv2.VideoCapture(self.filename)
         # Check if camera opened successfully
         if not vidCapture.isOpened():
             print("Error opening video  file")
 
-        width = int(vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        width = vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+        # reduce the size
+        width = int(width / (height / self.height))
+        height = self.height
+
         length = int(vidCapture.get(cv2.CAP_PROP_FRAME_COUNT))
         self.width = width
-        self.height = height
         self.length = length
 
         index = 0
@@ -43,13 +49,15 @@ class VideoAnalysis:
         rowhists = np.zeros((height, N, N), int)
         self.colsti = np.empty((width, length), dtype=np.uint8)
         self.rowsti = np.empty((height, length), dtype=np.uint8)
-        thresh = 0.5
         # Read until video is completed
         while vidCapture.isOpened():
 
             # Capture frame-by-frame
-            ret, frame = vidCapture.read()
+            ret, frame_full = vidCapture.read()
+
             if ret:
+                # reduce resolution
+                frame = cv2.resize(frame_full, (width, height))
                 # create a histogram for every row and column in the given frame
                 for i in range(height):
                     for j in range(width):
@@ -72,26 +80,12 @@ class VideoAnalysis:
 
                 # create a column of our column sti
                 for i in range(width):
-                    diff = 0
-                    for j in range(N):
-                        for k in range(N):
-                            diff += min(prevcolhists[i][j][k], colhists[i][j][k])
-                            # reset for next loop since we are done with it
-                            prevcolhists[i][j][k] = colhists[i][j][k]
-                            colhists[i][j][k] = 0
-                    diff /= height
-                    self.colsti[i][index] = (diff > thresh) * 255
+                    diff = self.histogram_intersection(height, N, prevcolhists[i], colhists[i])
+                    self.colsti[i][index] = (diff > self.thresh) * 255
 
                 for i in range(height):
-                    diff = 0
-                    for j in range(N):
-                        for k in range(N):
-                            diff += min(prevrowhists[i][j][k], rowhists[i][j][k])
-                            # reset for next loop since we are done with it
-                            prevrowhists[i][j][k] = rowhists[i][j][k]
-                            rowhists[i][j][k] = 0
-                    diff /= width
-                    self.rowsti[i][index] = (diff > thresh) * 255
+                    diff = self.histogram_intersection(width, N, prevrowhists[i], rowhists[i])
+                    self.rowsti[i][index] = (diff > self.thresh) * 255
 
                 index += 1
                 # Display the resulting frame
@@ -104,3 +98,17 @@ class VideoAnalysis:
         # display()
         vidCapture.release()
         cv2.destroyAllWindows()  # just to be safe
+
+    # VERY IMPORTANT, this function also resets the histogram for next loop
+    # NOT SAFE
+    @staticmethod
+    def histogram_intersection(total, N, prevhist, hist):
+        diff = 0
+        for j in range(N):
+            for k in range(N):
+                diff += min(prevhist[j][k], hist[j][k])
+                # reset for next loop since we are done with it
+                prevhist[j][k] = hist[j][k]
+                hist[j][k] = 0
+        diff /= total
+        return diff
