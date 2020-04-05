@@ -1,26 +1,19 @@
-import cv2
-import numpy as np
-from kivy.uix.button import Button
-from kivy.uix.filechooser import FileChooserListView
-from kivy.uix.videoplayer import VideoPlayer
-import math
-from src.videoAnalysis import VideoAnalysis
+import threading
 
-global tink  # the parent declaration
-global fileName
-global sti
+import cv2
+from kivy.uix.button import Button
+from kivy.uix.videoplayer import VideoPlayer
+from src.videoAnalysis import VideoAnalysis
 from kivy.app import App
 from kivy.uix.label import Label
-from kivy.uix.widget import Widget
 from kivy.lang import Builder
 import os
 from kivy.uix.boxlayout import BoxLayout
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
-import threading
 from kivy.uix.checkbox import CheckBox
+from multiprocessing import Process
 
-# todo: make a decent filechooser
 # todo: Clean the code
 
 
@@ -66,6 +59,10 @@ global checkBox1
 global checkBox2
 global activeSTIstring
 global va
+global tink  # the parent declaration
+global fileName
+global rowsti
+global colsti
 
 class mainGUI(App):
 
@@ -74,7 +71,6 @@ class mainGUI(App):
         global player
         global currentFile
         global videoBreakbtn
-        global sti
         global checkBox1
         global checkBox2
 
@@ -134,23 +130,6 @@ def activeSTI(instance, isActive):
             checkBox1.active = True
 
 
-def videoBreakDown_thread(instance=1):
-    global va
-    va = VideoAnalysis(fileName)
-    vbthread = threading.Thread(target=va.analyse, args=(analysisDone,))
-    vbthread.start()
-
-
-def analysisDone(va):
-    global videoBreakbtn
-    global rowsti
-    global colsti
-    rowsti = va.rowsti
-    colsti = va.colsti
-    videoBreakbtn.text = "Show transition"
-    videoBreakbtn.disabled = False
-
-
 def FileChooserCallback(instance):
     Tk().withdraw()
     global fileName
@@ -159,7 +138,24 @@ def FileChooserCallback(instance):
     fileName = askopenfilename()
     updateVideoPlayer(fileName)
     updateLabel(fileName)
-    videoBreakDown_thread()
+    analyze_video()
+
+
+def analyze_video():
+    global va
+    va = VideoAnalysis(fileName)
+    va_process = threading.Thread(target=va.analyse, args=(breakdown_complete_callback,))
+    va_process.start()
+
+
+def breakdown_complete_callback(va):
+    global videoBreakbtn
+    global rowsti
+    global colsti
+    rowsti = va.rowsti
+    colsti = va.colsti
+    videoBreakbtn.text = "Show transition"
+    videoBreakbtn.disabled = False
 
 
 def updateLabel(fname):
@@ -175,99 +171,7 @@ def updateVideoPlayer(fname):
     player.disabled = False
 
 
-global detectedSTItransition
-
-
-# def analyze_sti(img):
-#     global detectedSTItransition
-#     detectedSTItransition = np.zeros(2, dtype="float")
-#     cv2.imwrite("temp.png", img)
-#     img = cv2.imread("temp.png")
-#     gray = img.copy()
-#
-#     kernel_size = 5
-#     blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
-#     low_threshold = 50
-#     high_threshold = 100
-#     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
-#
-#     rho = 1
-#     theta = np.pi / 180
-#     threshold = 20  # seems like a sweet spot
-#     min_line_length = 50
-#     max_line_gap = 2
-#     line_image = np.copy(img) * 0
-#
-#     lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
-#                              min_line_length, max_line_gap)
-#
-#     lines = np.copy(lines_)
-#
-#     k = 0
-#     slope = np.zeros(len(lines))
-#     length = np.zeros(len(lines))
-#     if type(lines) is np.ndarray:
-#         for line in lines:
-#             for x1, y1, x2, y2 in line:
-#                 slope[k] = float((y2 - y1) / (x2 - x1))
-#                 length[k] = math.hypot(x1 - x2, y1 - y2)
-#                 k += 1
-#
-#     length.sort(kind='quicksort')
-#
-#     # checking for similar slope to reduce copies.
-#     wiggleRoom = 0.1
-#     for m in range(0, len(lines) - 1):
-#         if slope[m] - slope[m + 1] > wiggleRoom:
-#             lines = np.delete(lines, (m, 0), axis=0)
-#
-#     detectedSTItransition[0] = lines[len(lines) - 1][0][0]
-#     detectedSTItransition[1] = lines[len(lines) - 1][0][2]
-#     print(detectedSTItransition)
-#     if type(lines) is np.ndarray:
-#         for line in lines:
-#             for x1, y1, x2, y2 in line:
-#                 cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
-#
-#         # print(lines)
-#
-#         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
-#         cv2.imshow("detected transition", lines_edges)
-#     else:
-#         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
-#         cv2.imshow("detected transition", lines_edges)
-#
-#     os.remove("temp.png")
-#
-#     typeOfTransition(slope[len(slope)-1])
-#
-#     cv2.waitKey(0)
-#
-# def typeOfTransition(x=0):
-#     if x is 0:
-#         return
-#     type = ""
-#     theta = math.atan(x)
-#     print(theta)
-#     tol = 0.0001
-#     if (theta ) > 0:
-#         if checkBox1.active:
-#             type = "lr"
-#         else:
-#             type = "ud"
-#     else:
-#         if(theta ) < 0:
-#             if checkBox1.active:
-#                 type = "rl"
-#             else:
-#                 type = "du"
-#     print("type is: ", type)
-
-
-#########################
-
-
-def display(instance=0):
+def display(instance):
     global rowsti
     global colsti
     global checkBox1
