@@ -119,7 +119,7 @@ class VideoAnalysis:
         diff /= total
         return diff
 
-    def analyze_sti(self, c=1):
+    def analyze_sti(self, c):
         if c:
             img = self.colsti
         else:
@@ -133,7 +133,7 @@ class VideoAnalysis:
         kernel_size = 5
         blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
         low_threshold = 50
-        high_threshold = 100
+        high_threshold = 150
         edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
 
         rho = 1
@@ -174,7 +174,7 @@ class VideoAnalysis:
                 for x1, y1, x2, y2 in line:
                     cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
 
-            # print(lines)
+            print(lines)
 
             self.lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
             cv2.imshow("detected transition", self.lines_edges)
@@ -184,7 +184,7 @@ class VideoAnalysis:
 
         os.remove("temp.png")
 
-        self.typeOfTransition(slope[len(slope) - 1], c)
+        self.typeOfTransition(x = slope[len(slope) - 1], c = c)
 
         cv2.waitKey(0)
 
@@ -192,6 +192,7 @@ class VideoAnalysis:
         if x is 0:
             return
         type = ""
+        print("x is: ", x)
         theta = math.atan(x)
         print(theta)
         tol = 0.0001
