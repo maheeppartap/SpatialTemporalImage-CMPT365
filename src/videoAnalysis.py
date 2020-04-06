@@ -8,13 +8,7 @@ from matplotlib import pyplot as plt
 class VideoAnalysis:
 
     def __init__(self, filename, thresh=0.7, size=64):
-
         self.filename = filename
-        vidCapture = cv2.VideoCapture(filename)
-        # Check if camera opened successfully
-        if not vidCapture.isOpened():
-            print("Error opening video  file")
-
         self.thresh = thresh
         self.width = -1
         self.height = size

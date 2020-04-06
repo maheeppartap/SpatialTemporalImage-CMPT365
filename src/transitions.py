@@ -1,5 +1,5 @@
 class Transition:
-    vidstats = None
+    vidspec = None
 
     def __init__(self, start: int, end: int, r=255, g=128, b=70):
         # which frame the transition starts and ends on
@@ -23,8 +23,12 @@ class Transition:
 
     # draws something onto the frame to make the transition more prominent
     def draw_on_frame(self, frame, frame_ind):
-        if Transition.vidstats is None:
+        if Transition.vidspec is None:
             print("IMPORTANT! set vidstats before enhancing video")
+
+    # if start < frame < end, 0 < percent < 1
+    def _percent_complete(self, frame):
+        return ((frame - self.end) + self.start) / (self.end - self.start)
 
 
 class ColWipe(Transition):
@@ -35,6 +39,7 @@ class ColWipe(Transition):
 
     def draw_on_frame(self, frame, frame_ind):
         super().draw_on_frame(frame, frame_ind)
+        t = self._percent_complete(frame_ind)
 
 
 class HorWipe(Transition):
@@ -43,8 +48,16 @@ class HorWipe(Transition):
         self.srow = srow
         self.erow = erow
 
+    def draw_on_frame(self, frame, frame_ind):
+        super().draw_on_frame(frame, frame_ind)
+        t = self._percent_complete(frame_ind)
+
 
 class Cut(Transition):
     def __init__(self, start: int, end: int, fps=30, r=255, g=128, b=70):
         # make cut 1 second wide so we can enhance it more
         super().__init__(int(max(start-fps/2, 0)), int(end + fps/2), r, g, b)
+
+    def draw_on_frame(self, frame, frame_ind):
+        super().draw_on_frame(frame, frame_ind)
+        t = self._percent_complete(frame_ind)
