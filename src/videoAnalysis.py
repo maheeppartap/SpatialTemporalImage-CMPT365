@@ -27,7 +27,6 @@ class VideoAnalysis:
         complete_callback(self)
 
     def breakdowntoSTI(self):
-
         vidCapture = cv2.VideoCapture(self.filename)
         # Check if camera opened successfully
         if not vidCapture.isOpened():
@@ -53,6 +52,11 @@ class VideoAnalysis:
         rowhists = np.zeros((height, N, N), int)
         self.colsti = np.empty((width, length), dtype=np.uint8)
         self.rowsti = np.empty((height, length), dtype=np.uint8)
+        A = np.empty((N * N, N * N))
+        root2 = np.sqrt(2)
+        for i in range(N * N):
+            for j in range(N * N):
+                A[i][j] = 1 - np.sqrt(float(i) * i / N + float(j) * j / N) / root2
         # Read until video is completed
         while vidCapture.isOpened():
 
@@ -85,11 +89,11 @@ class VideoAnalysis:
 
                 # create a column of our column sti
                 for i in range(width):
-                    diff = self.histogram_intersection(height, N, prevcolhists[i], colhists[i])
+                    diff = self.hist_intersection(height, N, prevcolhists[i], colhists[i])
                     self.colsti[i][index] = (diff > self.thresh) * 255
 
                 for i in range(height):
-                    diff = self.histogram_intersection(width, N, prevrowhists[i], rowhists[i])
+                    diff = self.hist_intersection(width, N, prevrowhists[i], rowhists[i])
                     self.rowsti[i][index] = (diff > self.thresh) * 255
 
                 index += 1
@@ -104,20 +108,23 @@ class VideoAnalysis:
         vidCapture.release()
         cv2.destroyAllWindows()  # just to be safe
 
-
-# VERY IMPORTANT, this function also resets the histogram for next loop
-# NOT SAFE
+    # VERY IMPORTANT, this function also resets the histogram for next loop
+    # NOT SAFE
     @staticmethod
-    def histogram_intersection(total, N, prevhist, hist):
+    def hist_intersection(total, N, prevhist, hist):
         diff = 0
         for j in range(N):
             for k in range(N):
                 diff += min(prevhist[j][k], hist[j][k])
-            # reset for next loop since we are done with it
+                # reset for next loop since we are done with it
                 prevhist[j][k] = hist[j][k]
                 hist[j][k] = 0
         diff /= total
         return diff
+
+    @staticmethod
+    def ibm_hist_diff(total, N, prevhist, hist):
+        pass
 
     def analyze_sti(self, c):
         if c:
@@ -184,7 +191,7 @@ class VideoAnalysis:
 
         os.remove("temp.png")
 
-        self.typeOfTransition(x = slope[len(slope) - 1], c = c)
+        self.typeOfTransition(x=slope[len(slope) - 1], c=c)
 
         cv2.waitKey(0)
 
