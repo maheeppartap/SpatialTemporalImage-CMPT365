@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 import os
+from matplotlib import pyplot as plt
 
 
 class VideoAnalysis:
@@ -208,3 +209,6 @@ class VideoAnalysis:
                 else:
                     type = "du"
         print("type is: ", type)
+
+
+
