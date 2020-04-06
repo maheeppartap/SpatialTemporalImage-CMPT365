@@ -2,13 +2,13 @@ import cv2
 import numpy as np
 import math
 import os
+from matplotlib import pyplot as plt
 
 
 class VideoAnalysis:
 
     def __init__(self, filename, thresh=0.7, size=64):
-        self.detectedSTItransition = np.zeros(2, dtype="float")
-        self.detectedSTItransition2 = np.zeros(2, dtype="float")
+
         self.filename = filename
         vidCapture = cv2.VideoCapture(filename)
         # Check if camera opened successfully
@@ -52,11 +52,6 @@ class VideoAnalysis:
         rowhists = np.zeros((height, N, N), int)
         self.colsti = np.empty((width, length), dtype=np.uint8)
         self.rowsti = np.empty((height, length), dtype=np.uint8)
-        A = np.empty((N * N, N * N))
-        root2 = np.sqrt(2)
-        for i in range(N * N):
-            for j in range(N * N):
-                A[i][j] = 1 - np.sqrt(float(i) * i / N + float(j) * j / N) / root2
         # Read until video is completed
         while vidCapture.isOpened():
 
@@ -142,11 +137,11 @@ class VideoAnalysis:
         low_threshold = 50
         high_threshold = 150
         edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
-
+        height, width, channels = img.shape
         rho = 1
         theta = np.pi / 180
         threshold = 20  # seems like a sweet spot
-        min_line_length = 50
+        min_line_length = 0.9*height
         max_line_gap = 2
         line_image = np.copy(img) * 0
 
@@ -163,18 +158,10 @@ class VideoAnalysis:
                 for x1, y1, x2, y2 in line:
                     slope[k] = float((y2 - y1) / (x2 - x1))
                     length[k] = math.hypot(x1 - x2, y1 - y2)
+                    self.detectedSTItransition[k] = lines[len(lines) - 1][0][0]
+                    self.detectedSTItransition[k+1] = lines[len(lines) - 1][0][2]
                     k += 1
 
-        length.sort(kind='quicksort')
-
-        # checking for similar slope to reduce copies.
-        wiggleRoom = 0.1
-        for m in range(0, len(lines) - 1):
-            if slope[m] - slope[m + 1] > wiggleRoom:
-                lines = np.delete(lines, (m, 0), axis=0)
-
-        self.detectedSTItransition[0] = lines[len(lines) - 1][0][0]
-        self.detectedSTItransition[1] = lines[len(lines) - 1][0][2]
         print(self.detectedSTItransition)
         if type(lines) is np.ndarray:
             for line in lines:
@@ -190,28 +177,52 @@ class VideoAnalysis:
             cv2.imshow("detected transition", self.lines_edges)
 
         os.remove("temp.png")
+        for line in lines:
+            self.showTransition(x=line[0])
 
-        self.typeOfTransition(x=slope[len(slope) - 1], c=c)
+        self.typeOfTransition(x = slope, c = c)
 
         cv2.waitKey(0)
 
-    def typeOfTransition(self, c, x=0):
+    def typeOfTransition(self, c, x):
         if x is 0:
             return
         type = ""
-        print("x is: ", x)
-        theta = math.atan(x)
-        print(theta)
-        tol = 0.0001
-        if theta > 0:
-            if c:
-                type = "lr"
-            else:
-                type = "ud"
-        else:
-            if theta < 0:
+        for slope in x:
+            print("slope is: ", slope)
+            theta = math.atan(slope)
+            print(theta)
+            if theta > 0:
                 if c:
-                    type = "rl"
+                    type = "lr"
                 else:
-                    type = "du"
+                    type = "ud"
+            else:
+                if theta < 0:
+                    if c:
+                        type = "rl"
+                    else:
+                        type = "du"
+
         print("type is: ", type)
+
+
+    def showTransition(self, x):
+        cap = cv2.VideoCapture(self.filename)
+        cap.set(1, x[0])
+        ret, self.beginFrame = cap.read()
+
+        cap.set(1,int((x[0]+x[2])/2))
+        ret, self.middleFrame = cap.read()
+
+        cap.set(1, x[2])
+        ret, self.endFrame = cap.read()
+        cap.release()
+
+
+
+
+
+
+
+
