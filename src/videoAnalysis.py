@@ -138,8 +138,8 @@ class VideoAnalysis:
         height, width, channels = img.shape
         rho = 1
         theta = np.pi / 180
-        threshold = 15  # seems like a sweet spot
-        min_line_length =20
+        threshold = 10  # seems like a sweet spot
+        min_line_length = 20
         max_line_gap = 2
         line_image = np.copy(img) * 0
 
@@ -150,17 +150,7 @@ class VideoAnalysis:
 
         k = 0
         slope = np.zeros(len(lines))
-        length = np.zeros(len(lines))
-        if type(lines) is np.ndarray:
-            for line in lines:
-                for x1, y1, x2, y2 in line:
-                    slope[k] = float((y2 - y1) / (x2 - x1))
-                    length[k] = math.hypot(x1 - x2, y1 - y2)
-                    #self.detectedSTItransition[k] = lines[len(lines) - 1][0][0]
-                    #self.detectedSTItransition[k + 1] = lines[len(lines) - 1][0][2]
-                    k += 1
-
-        #print(self.detectedSTItransition)
+        # print(self.detectedSTItransition)
         if type(lines) is np.ndarray:
             for line in lines:
                 for x1, y1, x2, y2 in line:
@@ -168,7 +158,11 @@ class VideoAnalysis:
 
             print(lines)
 
+            lines = self.enhanceImg(lines)
+
+            print("now: ", lines)
             self.lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
+
             cv2.imshow("detected transition", self.lines_edges)
         else:
             self.lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
@@ -182,6 +176,8 @@ class VideoAnalysis:
             k += 1
         cv2.waitKey(0)
 
+
+
     def typeOfTransition(self, c, x, timeline=0):
         if x is 0:
             return
@@ -192,20 +188,20 @@ class VideoAnalysis:
         print(theta)
         if theta > 0:
             if c:
-                #tempTransition = ColWipe(start=timeline[0], end=timeline[2], scol=timeline[1], ecol=timeline[2])
+                # tempTransition = ColWipe(start=timeline[0], end=timeline[2], scol=timeline[1], ecol=timeline[2])
                 type = "lr"
             else:
-                #tempTransition = HorWipe(start=timeline[1], end=timeline[0], srow=timeline[4], erow=timeline[3])
+                # tempTransition = HorWipe(start=timeline[1], end=timeline[0], srow=timeline[4], erow=timeline[3])
                 type = "ud"
         else:
             if theta < 0:
                 if c:
-                    #tempTransition = ColWipe(start=timeline[0], end=timeline[2], scol=timeline[1], ecol=timeline[2])
+                    # tempTransition = ColWipe(start=timeline[0], end=timeline[2], scol=timeline[1], ecol=timeline[2])
                     type = "rl"
                 else:
-                    #tempTransition = HorWipe(start=timeline[1], end=timeline[0], srow=timeline[4], erow=timeline[3])
+                    # tempTransition = HorWipe(start=timeline[1], end=timeline[0], srow=timeline[4], erow=timeline[3])
                     type = "du"
-        #self.listOfTransitions.append(tempTransition)
+        # self.listOfTransitions.append(tempTransition)
         print("type is: ", type)
         print("done")
 
@@ -213,7 +209,7 @@ class VideoAnalysis:
         cap = cv2.VideoCapture(self.filename)
         cap.set(1, x[0])
         ret, self.beginFrame = cap.read()
-        cv2.imshow("dvjwhevdu",self.beginFrame)
+        cv2.imshow("dvjwhevdu", self.beginFrame)
 
         cap.set(1, int((x[0] + x[2]) / 2))
         ret, self.middleFrame = cap.read()
@@ -221,3 +217,36 @@ class VideoAnalysis:
         cap.set(1, x[2])
         ret, self.endFrame = cap.read()
         cap.release()
+
+    def enhanceImg(self, lines):
+        xInterceptTol = 50
+        slopeTol =1
+        index = []
+        lines_ = np.copy(lines)
+        index = []
+        for line in lines:
+            lines_= np.delete(lines_,0,0)
+            slope = float((line[0][3]-line[0][1])/(line[0][2]-line[0][0]))
+            xIntercept = float((-1)*slope*line[0][0])
+            k = 0
+            for cmp in lines_:
+                k += 1
+                slope_ = float((cmp[0][3]-cmp[0][1])/(cmp[0][2]-cmp[0][0]))
+                xIntercept_ = float((-1)*slope_*cmp[0][0])
+                if abs(slope_-slope) > slopeTol:
+                    #print("line is: ", lines, " cmp is: ", cmp, " slope diff: ", abs(slope_-slope))
+                    continue
+                if abs(xIntercept_ - xIntercept) > xInterceptTol:
+                    #print("line is: ", lines, " cmp is: ", cmp, " intercept diff: ", abs(xIntercept_ - xIntercept))
+                    continue
+                index.append(k)
+                line[0][2] = cmp[0][2]
+                line[0][3] = cmp[0][3]
+
+        lines = np.delete(lines, index, 0)
+        print("Lines is now: ", lines)
+
+        #np.delete(lines, index, 1)
+        print(lines)
+        print("index is: ", index)
+        return lines
