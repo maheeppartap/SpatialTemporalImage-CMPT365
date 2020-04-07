@@ -23,6 +23,7 @@ def _detect_lines(sti) -> list:
     groups = _first_pass_group(lines)
     lines = _combine_lines(groups)
     _weed_false_positives(lines)
+    _extrapolate_end_points(lines)
     return lines
 
 
@@ -62,6 +63,10 @@ def _combine_lines_thresholded(groups) -> list:
 def _weed_false_positives(lines) -> None:
     pass
 
+
+# make the end points be 0 or 1, instead of somewhere in the middle
+def _extrapolate_end_points(lines) -> None:
+    pass
 
 # simple as it sounds
 def _map_lines_to_transitions(lines, type) -> list:
