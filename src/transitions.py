@@ -40,6 +40,7 @@ class ColWipe(Transition):
     def draw_on_frame(self, frame, frame_ind):
         super().draw_on_frame(frame, frame_ind)
         t = self._percent_complete(frame_ind)
+        testing = 1
 
 
 class HorWipe(Transition):
