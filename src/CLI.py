@@ -14,7 +14,7 @@ def main():
     # va = VideoAnalysis(filepath)
     # va.analyse()
     filepath = get_full_name(filepath)
-
+    print(filepath)
     enhance(filepath, [], outfile)
 
 def get_full_name(filename):
