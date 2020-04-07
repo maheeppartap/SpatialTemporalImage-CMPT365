@@ -9,8 +9,8 @@ import numpy as np
 # main function for command line
 def detect_transitions(colsti, rowsti) -> list:
     # detect the lines
-    col_lines = _detect_lines(colsti)
-    row_lines = _detect_lines(rowsti)
+    col_lines = _detect_lines(colsti, col=True)
+    row_lines = _detect_lines(rowsti, col=False)
     # classify them as transitions
     transitions = _map_lines_to_transitions(col_lines, True)
     transitions += _map_lines_to_transitions(row_lines, False)
@@ -18,8 +18,9 @@ def detect_transitions(colsti, rowsti) -> list:
 
 
 # detect high quality lines
-def _detect_lines(sti) -> list:
-    lines = _simple_line_detection(sti)
+#type = true for col, false for row
+def _detect_lines(sti, col: bool) -> list:
+    lines = _simple_line_detection(sti, col)
     groups = _first_pass_group(lines)
     lines = _combine_lines(groups)
     _weed_false_positives(lines)
@@ -28,19 +29,65 @@ def _detect_lines(sti) -> list:
 
 
 # use openCV to find simple lines
-def _simple_line_detection(sti) -> list:
-    pass
+def _simple_line_detection(sti, col: bool) -> list:
+    cv2.imwrite("temp.png", sti)
+    img = cv2.imread("temp.png")
+    gray = img.copy()
+
+    kernel_size = 5
+    blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
+    low_threshold = 20
+    high_threshold = 150
+    edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+    height, width, channels = img.shape
+    rho = 1
+    theta = np.pi / 180
+    threshold = 10  # seems like a sweet spot
+    min_line_length = 20
+    max_line_gap = 2
+    line_image = np.copy(img) * 0
+
+    lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                             min_line_length, max_line_gap)
+    return list(lines_)
 
 
 # group the lines into groups based on how close they are, order by first point
 # returns list of groups, (where a group is a list of lines that are close)
 def _first_pass_group(lines) -> list:
-    pass
+    xInterceptTol = 50
+    slopeTol = 1
+    lines_ = np.copy(lines)
+    index = []
+    groups = []
+    for line in lines[:]:
+        lines_ = np.delete(lines_, 0, 0)
+
+        slope = float((line[0][3] - line[0][1]) / (line[0][2] - line[0][0]))
+        xIntercept = float((-1) * slope * line[0][0])
+        k = -1
+        groups_ = []
+        groups_.append(line[0])
+        for cmp in lines_[:]:
+            k += 1
+            slope_ = float((cmp[0][3] - cmp[0][1]) / (cmp[0][2] - cmp[0][0]))
+            xIntercept_ = float((-1) * slope_ * cmp[0][0])
+            if abs(slope_ - slope) > slopeTol:
+                continue
+            if abs(xIntercept_ - xIntercept) > xInterceptTol:
+                continue
+            groups_.append(cmp[0])
+
+        groups.append(groups_)
+
+    print(groups)
+    return groups
+
 
 
 # ALL combine_lines have the same input and output, just different methods of achieving
-# this is just an easy way to toggle between them and see which is better
-# maybe later we will make the combiner a toggle
+# # this is just an easy way to toggle between them and see which is better
+# # maybe later we will make the combiner a toggle
 def _combine_lines(groups) -> list:
     return _combine_lines_thresholded(groups)
 
@@ -73,8 +120,7 @@ def _map_lines_to_transitions(lines, type) -> list:
     pass
 
 
-def analyze_sti(img, c, filename):
-    detectedSTItransition = np.zeros(2, dtype="float")
+def analyze_sti(img, c):
     cv2.imwrite("temp.png", img)
     img = cv2.imread("temp.png")
     gray = img.copy()
@@ -120,7 +166,7 @@ def analyze_sti(img, c, filename):
     os.remove("temp.png")
     k = 0
     for line in lines:
-        showTransition(line[0], filename)
+        #showTransition(line[0], filename)
         typeOfTransition(x=slope[k], c=c, timeline=lines[0])
         k += 1
     cv2.waitKey(0)
