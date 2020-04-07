@@ -16,9 +16,10 @@ class VideoAnalysis:
         self.rowsti = None
         self.colsti = None
 
-    def analyse(self, complete_callback):
+    def analyse(self, complete_callback=None):
         self.breakdowntoSTI()
-        complete_callback(self)
+        if complete_callback:
+            complete_callback(self)
 
     def breakdowntoSTI(self):
         vidCapture = cv2.VideoCapture(self.filename)
