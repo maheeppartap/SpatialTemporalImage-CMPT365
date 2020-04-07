@@ -26,7 +26,7 @@ def enhance(filename: str, transitions: list, outfile=None):
     height = int(vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
     length = int(vidCapture.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = int(vidCapture.get(cv2.CAP_PROP_FPS))
-    fourcc = int(vidCapture.get(cv2.CAP_PROP_FOURCC))
+    fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
     # set video properties for all the transitions to use
     Transition.vidspec = VideoSpecs(width, height, length, fps)
 
@@ -44,10 +44,9 @@ def enhance(filename: str, transitions: list, outfile=None):
     vidCapture.release()
     out.release()
     # just to be safe
-    cv2.destroyAllWindows()
 
 
 #TODO: implement this
 def outputfile(filename):
     split = filename.split(".")
-    return split[0] + "_enhanced." + split[1]
+    return split[0] + "_enhanced.mp4"
