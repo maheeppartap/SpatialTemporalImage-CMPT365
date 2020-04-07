@@ -22,13 +22,15 @@ def enhance(filename: str, transitions: list, outfile=None):
     if not vidCapture.isOpened():
         print("Error opening video  file")
 
-    width = vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH)
-    height = vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    length = vidCapture.get(cv2.CAP_PROP_FRAME_COUNT)
-    fps = vidCapture.get(cv2.CAP_PROP_FPS)
+    width = int(vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    length = int(vidCapture.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = int(vidCapture.get(cv2.CAP_PROP_FPS))
+    fourcc = int(vidCapture.get(cv2.CAP_PROP_FOURCC))
     # set video properties for all the transitions to use
     Transition.vidspec = VideoSpecs(width, height, length, fps)
-    out = cv2.VideoWriter(outfile, cv2.VideoWriter_fourcc(*'MJPG'), fps, (width, height))
+
+    out = cv2.VideoWriter(outfile, fourcc, fps, (width, height))
 
     while vidCapture.isOpened():
         # Capture frame-by-frame
@@ -44,6 +46,8 @@ def enhance(filename: str, transitions: list, outfile=None):
     # just to be safe
     cv2.destroyAllWindows()
 
+
 #TODO: implement this
 def outputfile(filename):
-    return "hello"
+    split = filename.split(".")
+    return split[0] + "_enhanced." + split[1]
