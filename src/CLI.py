@@ -17,6 +17,7 @@ def main():
     print(filepath)
     enhance(filepath, [], outfile)
 
+
 def get_full_name(filename):
     if not os.path.isfile(filename):
         raise ValueError(filename + " doesn't exist!")
