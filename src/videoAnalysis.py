@@ -3,6 +3,8 @@ import numpy as np
 import math
 import os
 from matplotlib import pyplot as plt
+from transitions import *
+import random
 
 
 class VideoAnalysis:
@@ -173,21 +175,23 @@ class VideoAnalysis:
         os.remove("temp.png")
         for line in lines:
             self.showTransition(x=line[0])
-
-        self.typeOfTransition(x = slope, c = c)
+            self.typeOfTransition(x = slope, c = c, timeline=lines[0])
 
         cv2.waitKey(0)
 
-    def typeOfTransition(self, c, x):
+    def typeOfTransition(self, c, x, timeline = 0):
         if x is 0:
             return
         type = ""
+        ListOfTransition = np.array(x.size)
+        k = 0
         for slope in x:
             print("slope is: ", slope)
             theta = math.atan(slope)
             print(theta)
             if theta > 0:
                 if c:
+                    tempTransition = ColWipe(start=timeline[0],end=timeline[2],scol=timeline[1],ecol=timeline[2])
                     type = "lr"
                 else:
                     type = "ud"
@@ -199,6 +203,7 @@ class VideoAnalysis:
                         type = "du"
 
         print("type is: ", type)
+
 
 
     def showTransition(self, x):
