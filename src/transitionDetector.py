@@ -18,11 +18,11 @@ def detect_transitions(colsti, rowsti) -> list:
 
 
 # detect high quality lines
-#type = true for col, false for row
+# type = true for col, false for row
 def _detect_lines(sti) -> list:
     lines = _simple_line_detection(sti)
     groups = _first_pass_group(lines)
-    lines = _combine_lines(groups, col)
+    lines = _combine_lines(groups)
     _weed_false_positives(lines)
     _extrapolate_end_points(lines)
     return lines
@@ -63,13 +63,12 @@ def _first_pass_group(lines) -> list:
     index = []
     groups = []
     for line in lines[:]:
-        lines_ = np.delete(lines_, 0, 0)
+        lines_ = np.delete(lines, 0, 0)
 
         slope = float((line[0][3] - line[0][1]) / (line[0][2] - line[0][0]))
         xIntercept = float((-1) * slope * line[0][0])
         k = -1
-        groups_ = []
-        groups_.append(line[0])
+        groups_ = [line[0]]
         for cmp in lines_[:]:
             k += 1
             slope_ = float((cmp[0][3] - cmp[0][1]) / (cmp[0][2] - cmp[0][0]))
@@ -85,12 +84,11 @@ def _first_pass_group(lines) -> list:
     return groups
 
 
-
 # ALL combine_lines have the same input and output, just different methods of achieving
 # # this is just an easy way to toggle between them and see which is better
 # # maybe later we will make the combiner a toggle
-def _combine_lines(groups, col:bool) -> list:
-    return _combine_lines_thresholded(groups, col)
+def _combine_lines(groups) -> list:
+    return _combine_lines_thresholded(groups)
 
 
 # check each group to see if any of the lines can be combined, return list of lines
@@ -103,7 +101,7 @@ def _combine_lines_hypothesis(groups) -> list:
     pass
 
 
-def _combine_lines_thresholded(groups, col:bool) -> list:
+def _combine_lines_thresholded(groups) -> list:
 
     finallist = []
     print("elements are: ", groups)
@@ -117,6 +115,8 @@ def _combine_lines_thresholded(groups, col:bool) -> list:
         finallist.append(temp)
 
     return finallist
+
+
 # remove any lines that appear to be false positives
 def _weed_false_positives(lines) -> None:
     pass
@@ -125,6 +125,7 @@ def _weed_false_positives(lines) -> None:
 # make the end points be 0 or 1, instead of somewhere in the middle
 def _extrapolate_end_points(lines) -> None:
     pass
+
 
 # simple as it sounds
 def _map_lines_to_transitions(lines, type) -> list:
@@ -177,7 +178,7 @@ def analyze_sti(img, c):
     os.remove("temp.png")
     k = 0
     for line in lines:
-        #showTransition(line[0], filename)
+        # showTransition(line[0], filename)
         typeOfTransition(x=slope[k], c=c, timeline=lines[0])
         k += 1
     cv2.waitKey(0)
