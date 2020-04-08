@@ -9,8 +9,8 @@ import numpy as np
 # main function for command line
 def detect_transitions(colsti, rowsti) -> list:
     # detect the lines
-    col_lines = _detect_lines(colsti, col=True)
-    row_lines = _detect_lines(rowsti, col=False)
+    col_lines = _detect_lines(colsti)
+    row_lines = _detect_lines(rowsti)
     # classify them as transitions
    # transitions = _map_lines_to_transitions(col_lines, True)
    # transitions += _map_lines_to_transitions(row_lines, False)
@@ -19,8 +19,8 @@ def detect_transitions(colsti, rowsti) -> list:
 
 # detect high quality lines
 #type = true for col, false for row
-def _detect_lines(sti, col: bool) -> list:
-    lines = _simple_line_detection(sti, col)
+def _detect_lines(sti) -> list:
+    lines = _simple_line_detection(sti)
     groups = _first_pass_group(lines)
     lines = _combine_lines(groups, col)
     _weed_false_positives(lines)
@@ -29,7 +29,7 @@ def _detect_lines(sti, col: bool) -> list:
 
 
 # use openCV to find simple lines
-def _simple_line_detection(sti, col: bool) -> list:
+def _simple_line_detection(sti) -> list:
     cv2.imwrite("temp.png", sti)
     img = cv2.imread("temp.png")
     gray = img.copy()
