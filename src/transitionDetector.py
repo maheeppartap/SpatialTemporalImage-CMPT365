@@ -2,6 +2,7 @@
 import math
 import os
 
+from transitions import *
 import cv2
 import numpy as np
 
@@ -18,7 +19,7 @@ def detect_transitions(colsti, rowsti) -> list:
 
 
 # detect high quality lines
-# type = true for col, false for row
+#type = true for col, false for row
 def _detect_lines(sti) -> list:
     lines = _simple_line_detection(sti)
     groups = _first_pass_group(lines)
@@ -60,15 +61,17 @@ def _first_pass_group(lines) -> list:
     xInterceptTol = 50
     slopeTol = 1
     lines_ = np.copy(lines)
+
     index = []
     groups = []
-    for line in lines[:]:
-        lines_ = np.delete(lines, 0, 0)
 
+    for line in lines[:]:
+        lines_ = np.delete(lines_, 0, 0)
         slope = float((line[0][3] - line[0][1]) / (line[0][2] - line[0][0]))
         xIntercept = float((-1) * slope * line[0][0])
         k = -1
-        groups_ = [line[0]]
+        groups_ = []
+        groups_.append(line[0])
         for cmp in lines_[:]:
             k += 1
             slope_ = float((cmp[0][3] - cmp[0][1]) / (cmp[0][2] - cmp[0][0]))
@@ -82,6 +85,7 @@ def _first_pass_group(lines) -> list:
 
 
     return groups
+
 
 
 # ALL combine_lines have the same input and output, just different methods of achieving
@@ -101,22 +105,16 @@ def _combine_lines_hypothesis(groups) -> list:
     pass
 
 
-def _combine_lines_thresholded(groups) -> list:
+def _combine_lines_thresholded(groups ) -> list:
 
     finallist = []
     print("elements are: ", groups)
     for group in groups:
         group = sorted(group, key=lambda x: x[3], reverse=True)
-        temp = []
-        temp.append(group[0][0])
-        temp.append( group[0][1])
-        temp.append(group[-1][2])
-        temp.append(group[-1][3])
+        temp = [group[0][0], group[0][1], group[-1][2], group[-1][3]]
         finallist.append(temp)
 
     return finallist
-
-
 # remove any lines that appear to be false positives
 def _weed_false_positives(lines) -> None:
     pass
@@ -126,10 +124,31 @@ def _weed_false_positives(lines) -> None:
 def _extrapolate_end_points(lines) -> None:
     pass
 
-
 # simple as it sounds
-def _map_lines_to_transitions(lines, type) -> list:
-    pass
+def _map_lines_to_transitions(lines, col) -> list:
+    type = ""
+    transitionList = []
+    for line in lines:
+        x = float((line[0][3] - line[0][1])/(line[0][2]-line[0][0]))
+        theta = math.atan(x)
+        print(theta)
+        if theta > 0:
+            if col:
+                transitionList.append(ColWipe(start= line[0][0], end=line[0][2],scol=line[0][0], ecol=line[0][2]))
+                type = "lr"
+            else:
+                transitionList.append(HorWipe(start= line[0][0], end=line[0][2],srow=line[0][0], erow=line[0][2]))
+                type = "ud"
+        else:
+            if theta < 0:
+                if col:
+                    transitionList.append(ColWipe(start=line[0][0], end=line[0][2], scol=line[0][0], ecol=line[0][2]))
+                    type = "rl"
+                else:
+                    transitionList.append(HorWipe(start=line[0][0], end=line[0][2], srow=line[0][0], erow=line[0][2]))
+                    type = "du"
+    # self.listOfTransitions.append(tempTransition)
+    return transitionList
 
 
 def analyze_sti(img, c):
@@ -178,7 +197,7 @@ def analyze_sti(img, c):
     os.remove("temp.png")
     k = 0
     for line in lines:
-        # showTransition(line[0], filename)
+        #showTransition(line[0], filename)
         typeOfTransition(x=slope[k], c=c, timeline=lines[0])
         k += 1
     cv2.waitKey(0)
