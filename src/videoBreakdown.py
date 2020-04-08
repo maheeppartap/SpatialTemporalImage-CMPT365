@@ -73,7 +73,8 @@ def breakdowntoSTI(filename: str, height: int, thresh: float):
     # display()
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
-
+    cv2.imwrite("C.png", colsti)
+    cv2.imwrite("R.png", rowsti)
     return colsti, rowsti
 
 
@@ -90,3 +91,6 @@ def hist_intersection(total, N, prevhist, hist):
 
 def ibm_hist_diff(total, N, prevhist, hist):
     pass
+
+
+

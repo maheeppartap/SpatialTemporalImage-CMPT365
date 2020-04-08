@@ -12,9 +12,9 @@ def detect_transitions(colsti, rowsti) -> list:
     col_lines = _detect_lines(colsti, col=True)
     row_lines = _detect_lines(rowsti, col=False)
     # classify them as transitions
-    transitions = _map_lines_to_transitions(col_lines, True)
-    transitions += _map_lines_to_transitions(row_lines, False)
-    return transitions
+   # transitions = _map_lines_to_transitions(col_lines, True)
+   # transitions += _map_lines_to_transitions(row_lines, False)
+   # return transitions
 
 
 # detect high quality lines
@@ -22,7 +22,7 @@ def detect_transitions(colsti, rowsti) -> list:
 def _detect_lines(sti, col: bool) -> list:
     lines = _simple_line_detection(sti, col)
     groups = _first_pass_group(lines)
-    lines = _combine_lines(groups)
+    lines = _combine_lines(groups, col)
     _weed_false_positives(lines)
     _extrapolate_end_points(lines)
     return lines
@@ -33,7 +33,6 @@ def _simple_line_detection(sti, col: bool) -> list:
     cv2.imwrite("temp.png", sti)
     img = cv2.imread("temp.png")
     gray = img.copy()
-
     kernel_size = 5
     blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
     low_threshold = 20
@@ -42,14 +41,17 @@ def _simple_line_detection(sti, col: bool) -> list:
     height, width, channels = img.shape
     rho = 1
     theta = np.pi / 180
-    threshold = 10  # seems like a sweet spot
+    threshold = int(0.5*height)  # seems like a sweet spot
     min_line_length = 20
     max_line_gap = 2
     line_image = np.copy(img) * 0
 
     lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                              min_line_length, max_line_gap)
-    return list(lines_)
+    if type(lines_) is np.ndarray:
+        return list(lines_)
+    print("No transition found")
+    exit(1)
 
 
 # group the lines into groups based on how close they are, order by first point
@@ -77,10 +79,9 @@ def _first_pass_group(lines) -> list:
             if abs(xIntercept_ - xIntercept) > xInterceptTol:
                 continue
             groups_.append(cmp[0])
-
         groups.append(groups_)
 
-    print(groups)
+
     return groups
 
 
@@ -88,8 +89,8 @@ def _first_pass_group(lines) -> list:
 # ALL combine_lines have the same input and output, just different methods of achieving
 # # this is just an easy way to toggle between them and see which is better
 # # maybe later we will make the combiner a toggle
-def _combine_lines(groups) -> list:
-    return _combine_lines_thresholded(groups)
+def _combine_lines(groups, col:bool) -> list:
+    return _combine_lines_thresholded(groups, col)
 
 
 # check each group to see if any of the lines can be combined, return list of lines
@@ -102,10 +103,20 @@ def _combine_lines_hypothesis(groups) -> list:
     pass
 
 
-def _combine_lines_thresholded(groups) -> list:
-    pass
+def _combine_lines_thresholded(groups, col:bool) -> list:
 
+    finallist = []
+    print("elements are: ", groups)
+    for group in groups:
+        group = sorted(group, key=lambda x: x[3], reverse=True)
+        temp = []
+        temp.append(group[0][0])
+        temp.append( group[0][1])
+        temp.append(group[-1][2])
+        temp.append(group[-1][3])
+        finallist.append(temp)
 
+    return finallist
 # remove any lines that appear to be false positives
 def _weed_false_positives(lines) -> None:
     pass
@@ -204,7 +215,7 @@ def showTransition(x, filename):
     cap = cv2.VideoCapture(filename)
     cap.set(1, x[0])
     ret, beginFrame = cap.read()
-    cv2.imshow("dvjwhevdu", beginFrame)
+    cv2.imshow("Begin transition", beginFrame)
 
     cap.set(1, int((x[0] + x[2]) / 2))
     ret, middleFrame = cap.read()
