@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 
-def breakdowntoSTI(filename: str, height=64, thresh=0.73):
+def breakdowntoSTI(filename: str, height=64, thresh=0.75):
     vidCapture = cv2.VideoCapture(filename)
     # Check if camera opened successfully
     if not vidCapture.isOpened():
@@ -56,14 +56,14 @@ def breakdowntoSTI(filename: str, height=64, thresh=0.73):
 
             # create a column of our column sti
             for i in range(width):
-                # diff = hist_intersection(height, prevcolhists[i], colhists[i])
-                diff = 1 - ibm_hist_diff(A, height, prevcolhists[i], colhists[i])
-                colsti[i][index] = (diff > thresh) * 255
+                # intersect = hist_inter(height, prevcolhists[i], colhists[i])
+                intersect = 1 - ibm_hist_diff(A, height, prevcolhists[i], colhists[i])
+                colsti[i][index] = (intersect > thresh) * 255
 
             for i in range(height):
-                # diff = hist_intersection(width, prevrowhists[i], rowhists[i])
-                diff = 1 - ibm_hist_diff(A, width, prevrowhists[i], rowhists[i])
-                rowsti[i][index] = (diff > thresh) * 255
+                # intersection = hist_inter(width, prevrowhists[i], rowhists[i])
+                intersect = 1 - ibm_hist_diff(A, width, prevrowhists[i], rowhists[i])
+                rowsti[i][index] = (intersect > thresh) * 255
 
             # reset for next loop
             prevcolhists = np.copy(colhists)
@@ -86,10 +86,6 @@ def breakdowntoSTI(filename: str, height=64, thresh=0.73):
     cv2.imwrite("C.png", colsti)
     cv2.imwrite("R.png", rowsti)
     return colsti, rowsti
-
-
-def hist_intersection(total, prevhist, hist):
-    return np.sum(np.minimum(prevhist, hist))/total
 
 
 def compute_A(N: int):
@@ -115,4 +111,6 @@ def ibm_hist_diff(A: np.ndarray, total: int, prevhist: np.ndarray, hist: np.ndar
     return np.sqrt(D2[0][0])
 
 
+def hist_inter(total, prevhist, hist):
+    return np.sum(np.minimum(prevhist, hist))/total
 
