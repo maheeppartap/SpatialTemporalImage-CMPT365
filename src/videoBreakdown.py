@@ -18,6 +18,7 @@ def breakdowntoSTI(filename: str, height: int, thresh: float):
     index = 0
     N = int(1 + np.log2(height))
 
+    # todo: convert these to 1 dimentional histograms
     prevcolhists = np.full((width, N, N), width + 1, dtype=int)
     prevrowhists = np.full((height, N, N), height + 1, dtype=int)
     colhists = np.zeros((width, N, N), int)
@@ -44,12 +45,12 @@ def breakdowntoSTI(filename: str, height: int, thresh: float):
                         r = frame[i][j][0] / total
                         g = frame[i][j][1] / total
                     # quantize chromaticity
-                    rN = int(np.floor(r * (N - 1)))
-                    gN = int(np.floor(g * (N - 1)))
-                    if rN == 7 or gN == 7:
-                        pass
-                    #   print(str(frame[i][j]))
-                    #  print(str(r) + " " + str(g))
+                    rN = int(np.floor(r * N))
+                    gN = int(np.floor(g * N))
+                    if rN == N:
+                        rN -= 1
+                    if gN == N:
+                        gN -= 1
                     colhists[j][rN][gN] += 1
                     rowhists[i][rN][gN] += 1
 
@@ -87,6 +88,20 @@ def hist_intersection(total, N, prevhist, hist):
             prevhist[j][k] = hist[j][k]
             hist[j][k] = 0
     return diff / total
+
+def compute_A(N: int):
+    sqrt2 = np.sqrt(2)
+    N2 = N*N
+    A = np.empty((N2, N2))
+    for i in range(N2):
+        r_i = i / N2
+        g_i = (i % N)/N
+        for j in range(N2):
+            r_j = j / N2
+            g_j = (j % N)/N
+            euc = np.sqrt((r_i - r_j) * (r_i - r_j) + (g_i - g_j) * (g_i - g_j))
+            A[i][j] = 1 - euc / sqrt2
+
 
 
 def ibm_hist_diff(total, N, prevhist, hist):

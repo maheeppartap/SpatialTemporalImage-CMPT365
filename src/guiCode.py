@@ -12,8 +12,6 @@ from kivy.uix.boxlayout import BoxLayout
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 from kivy.uix.checkbox import CheckBox
-from multiprocessing import Process
-from src.transitionDetector import analyze_sti
 
 # todo: Clean the code
 
@@ -180,14 +178,12 @@ def display(instance):
     if checkBox1.active:
         try:
             cv2.imshow("test", colsti / 255)
-            analyze_sti(colsti, True, fileName)
             cv2.waitKey(0)
         except:
             pass
     else:
         try:
             cv2.imshow("test", rowsti / 255)
-            va.analyze_sti(rowsti, False, fileName)
             cv2.waitKey(0)
         except:
             pass

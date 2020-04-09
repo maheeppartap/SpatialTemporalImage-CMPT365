@@ -57,6 +57,13 @@ def _blend_p(i, s, a) -> float:
     return max(0, a * (s - i) * (s - i) + 1)
 
 
+def _blend(frame, p, r, g, b):
+    q = 1-p
+    frame[0] = q * frame[0] + p * r
+    frame[1] = q * frame[1] + p * g
+    frame[2] = q * frame[2] + p * b
+
+
 class ColWipe(Transition):
     ridge_width = 0.1
 
@@ -90,20 +97,26 @@ class ColWipe(Transition):
         # from the left of the spine to the right of the spine
         for i in range(int(max(s - r - 1, 0)), _width_cap(s + r + 1)):
             p = _blend_p(i, s, a)
-            q = 1 - p
             for j in range(Transition.vidspec.height):
-                frame[j][i][0] = q*frame[j][i][0] + p*self.r
-                frame[j][i][1] = q*frame[j][i][1] + p*self.g
-                frame[j][i][2] = q*frame[j][i][2] + p*self.b
-
+                _blend(frame[j][i], p, self.r, self.g, self.b)
         return False
 
 
 class HorWipe(Transition):
+    ridge_width = 0.1
+
     def __init__(self, start: int, end: int, srow: int, erow: int, r=255, g=128, b=70):
         super().__init__(start, end, r, g, b)
         self.srow = srow
         self.erow = erow
+
+    # find the spine of the ridge
+    def _spine(self, t) -> float:
+        return _scale_up_height(((self.erow - self.srow) * t) + self.srow)
+
+    # radius of ridge (width/2)
+    def _radius(self) -> float:
+        return _scale_up_height(self.ridge_width / 2)
 
     def draw_on_frame(self, frame, frame_ind) -> bool:
         super().draw_on_frame(frame, frame_ind)
@@ -113,6 +126,17 @@ class HorWipe(Transition):
         elif t > 1:
             return True
 
+        # get variables for the equation a(i-s)^2 + 1
+        # this is our blend parabola
+        s = self._spine(t)
+        r = self._radius()
+        # set a so that (s-r) and (s+r) are roots to the parabola
+        a = -1 / (r * r)
+        # from the left of the spine to the right of the spine
+        for i in range(int(max(s - r - 1, 0)), _height_cap(s + r + 1)):
+            p = _blend_p(i, s, a)
+            for j in range(Transition.vidspec.width):
+                _blend(frame[i][j], p, self.r, self.g, self.b)
         return False
 
 
