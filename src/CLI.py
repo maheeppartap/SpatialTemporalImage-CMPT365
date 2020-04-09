@@ -1,8 +1,10 @@
 import os
 import sys
+from time import time
 
 from src.videoAnalysis import VideoAnalysis
 from src.videoEnhancer import enhance
+from src.videoBreakdown import breakdowntoSTI
 
 
 def main():
@@ -14,8 +16,11 @@ def main():
     # va = VideoAnalysis(filepath)
     # va.analyse()
     filepath = get_full_name(filepath)
-    print(filepath)
-    enhance(filepath, [], outfile)
+    start = time()
+    breakdowntoSTI(filepath)
+    end = time()
+    print(end-start)
+    # enhance(filepath, [], outfile)
 
 
 def get_full_name(filename):
