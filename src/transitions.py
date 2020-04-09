@@ -141,9 +141,9 @@ class HorWipe(Transition):
 
 
 class Cut(Transition):
-    def __init__(self, start: int, end: int, fps=30, r=255, g=128, b=70):
+    def __init__(self, start: int, r=255, g=128, b=70):
         # make cut 1 second wide so we can enhance it more
-        super().__init__(int(max(start - fps / 2, 0)), int(end + fps / 2), r, g, b)
+        super().__init__(start, start, r, g, b)
 
     def draw_on_frame(self, frame, frame_ind) -> bool:
         super().draw_on_frame(frame, frame_ind)

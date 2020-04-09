@@ -45,12 +45,8 @@ def breakdowntoSTI(filename: str, height: int, thresh: float):
                         r = frame[i][j][0] / total
                         g = frame[i][j][1] / total
                     # quantize chromaticity
-                    rN = int(np.floor(r * N))
-                    gN = int(np.floor(g * N))
-                    if rN == N:
-                        rN -= 1
-                    if gN == N:
-                        gN -= 1
+                    rN = min(int(np.floor(r * N)), N-1)
+                    gN = min((np.floor(g * N)), N-1)
                     colhists[j][rN][gN] += 1
                     rowhists[i][rN][gN] += 1
 
