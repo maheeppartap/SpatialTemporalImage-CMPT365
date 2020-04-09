@@ -21,16 +21,16 @@ def detect_transitions(colsti, rowsti) -> list:
 # detect high quality lines
 #type = true for col, false for row
 def _detect_lines(sti) -> list:
-    lines = _simple_line_detection(sti)
+    lines, height = _simple_line_detection(sti)
     groups = _first_pass_group(lines)
     lines = _combine_lines(groups)
-    _weed_false_positives(lines)
+    _weed_false_positives(lines, height)
     _extrapolate_end_points(lines)
     return lines
 
 
 # use openCV to find simple lines
-def _simple_line_detection(sti) -> list:
+def _simple_line_detection(sti) -> (list, int):
     cv2.imwrite("temp.png", sti)    # doing this changes it to the correct format
     img = cv2.imread("temp.png")
     gray = img.copy()
@@ -48,7 +48,7 @@ def _simple_line_detection(sti) -> list:
     lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                              min_line_length, max_line_gap)
     if type(lines_) is np.ndarray:
-        return list(lines_)
+        return list(lines_), height
     print("No transition found")
     exit(1) #exit if no transitions
 
@@ -108,11 +108,20 @@ def _combine_lines_thresholded(groups ) -> list:
         group = sorted(group, key=lambda x: x[3], reverse=True)
         temp = [group[0][0], group[0][1], group[-1][2], group[-1][3]]
         finallist.append(temp)
-
     return finallist
+
 # remove any lines that appear to be false positives
-def _weed_false_positives(lines) -> None:
-    pass
+def _weed_false_positives(lines, height) -> list:
+    threshConst = 0.7
+    Threshold = threshConst*height
+    finalList = []
+
+    for line in lines:
+        dist = float(math.sqrt((line[2]-line[0])*(line[2]-line[0]) - (line[3]-line[1])*(line[3]-line[1])))
+        if dist > Threshold:
+            finalList.append(line)
+
+    return finalList
 
 
 # make the end points be 0 or 1, instead of somewhere in the middle
