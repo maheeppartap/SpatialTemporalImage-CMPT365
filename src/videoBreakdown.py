@@ -83,8 +83,8 @@ def breakdowntoSTI(filename: str, height=64, thresh=0.75):
     # display()
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
-    cv2.imwrite("C.png", colsti)
-    cv2.imwrite("R.png", rowsti)
+    cv2.imwrite("testSTI/cutC.png", colsti)
+    cv2.imwrite("testSTI/cutR.png", rowsti)
     return colsti, rowsti
 
 

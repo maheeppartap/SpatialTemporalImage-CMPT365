@@ -63,14 +63,19 @@ def _first_pass_group(lines) -> list:
     groups = []
     # comparing the lines with with all others
     for line in lines[:]:
+        groups_ = [line[0]]
+        if float(line[0][2]-line[0][0]) == 0:
+            groups.append(groups_)
+            continue
         lines_ = np.delete(lines_, 0, 0)  # making sure the checks are not repeated,
         slope = float((line[0][3] - line[0][1]) / (line[0][2] - line[0][0]))
         b = float(line[0][1] - (slope * line[0][0]))  # b from y= mx + b
         xIntercept = float((-1 * b) / slope)
         k = -1
-        groups_ = [line[0]]
         for cmp in lines_:
             k += 1
+            if cmp[0][2] is cmp[0][0]:
+                continue
             slope_ = float((cmp[0][3] - cmp[0][1]) / (cmp[0][2] - cmp[0][0]))
             b_ = float(cmp[0][1] - (slope_ * cmp[0][0]))
             xIntercept_ = float((-1 * b_) / slope_)  # compute the intercept
@@ -118,7 +123,7 @@ def _weed_false_positives(lines, height) -> list:
     finalList = []
 
     for line in lines:
-        dist = float(math.sqrt((line[2] - line[0]) * (line[2] - line[0]) - (line[3] - line[1]) * (line[3] - line[1])))
+        dist = float(math.sqrt(math.fabs((line[2] - line[0]) * (line[2] - line[0]) - (line[3] - line[1]) * (line[3] - line[1]))))
         if dist > Threshold:
             finalList.append(line)
 
@@ -134,6 +139,9 @@ def _extrapolate_end_points(lines) -> None:
 def _map_lines_to_transitions(lines, col) -> list:
     transitionList = []
     for line in lines:
+        if float(line[0]-line[2]) == 0:
+            transitionList.append(Cut(start=line[0]))
+            continue
         x = float((line[3] - line[1]) / (line[2] - line[0]))
         b = float(line[1] - (x * line[0]))
         intercept = int((-1 * b) / x)
