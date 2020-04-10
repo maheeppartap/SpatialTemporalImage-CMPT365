@@ -1,7 +1,7 @@
 # returns a list of transitions
 import math
 import os
-
+from sklearn.linear_model import LinearRegression
 from src.transitions import *
 import cv2
 import numpy as np
@@ -59,6 +59,8 @@ def _simple_line_detection(sti) -> (list, int):
 def _first_pass_group(lines) -> list:
     xInterceptTol = 20
     slopeTol = 1
+    print(lines[0][0][3])
+    lines.sort(key=lambda x: (math.fabs(x[0][1] - x[0][3])))
     lines_ = np.copy(lines)
     groups = []
     # comparing the lines with with all others
@@ -93,12 +95,34 @@ def _first_pass_group(lines) -> list:
 # # this is just an easy way to toggle between them and see which is better
 # # maybe later we will make the combiner a toggle
 def _combine_lines(groups) -> list:
-    return _combine_lines_thresholded(groups)
+    return _combine_lines_regression(groups)
 
 
 # check each group to see if any of the lines can be combined, return list of lines
 def _combine_lines_regression(groups) -> list:
-    pass
+    print("Running Linear regression..")
+    xList = []
+    yList = []
+    #   preparing the data
+    for lines in groups:
+        for line in lines:
+            xList.append(line[0])
+            xList.append(line[2])
+            yList.append(line[1])
+            yList.append(line[3])
+    # add salt as needed
+    x = np.array(xList).reshape(-1,1)
+    y = np.array(yList)
+
+    #   setup LR model
+    model = LinearRegression().fit(x,y)
+
+    print("Linear regression ended with a score: ", model.score(x,y))
+    slope = model.coef_
+    b = model.intercept_
+    print("slope: ", slope)
+    print("b: ", b)
+
 
 
 # feel free to add another method
@@ -121,12 +145,13 @@ def _weed_false_positives(lines, height) -> list:
     threshConst = 0.7
     Threshold = threshConst * height
     finalList = []
-
-    for line in lines:
-        dist = float(math.sqrt(math.fabs((line[2] - line[0]) * (line[2] - line[0]) - (line[3] - line[1]) * (line[3] - line[1]))))
-        if dist > Threshold:
-            finalList.append(line)
-
+    try:
+        for line in lines:
+            dist = float(math.sqrt(math.fabs((line[2] - line[0]) * (line[2] - line[0]) - (line[3] - line[1]) * (line[3] - line[1]))))
+            if dist > Threshold:
+                finalList.append(line)
+    except:
+        return []
     return finalList
 
 
@@ -138,27 +163,30 @@ def _extrapolate_end_points(lines) -> None:
 # simple as it sounds
 def _map_lines_to_transitions(lines, col) -> list:
     transitionList = []
-    for line in lines:
-        if float(line[0]-line[2]) == 0:
-            transitionList.append(Cut(start=line[0]))
-            continue
-        x = float((line[3] - line[1]) / (line[2] - line[0]))
-        b = float(line[1] - (x * line[0]))
-        intercept = int((-1 * b) / x)
-        theta = math.atan(x)  # slope is tan(theta), so calculate theta and see if its positive or neg
-        print("Theta is", theta)
-        if theta > 0:
-            if col:
-                transitionList.append(ColWipe(start=line[0], end=intercept, scol=1, ecol=0))
-            else:
-                transitionList.append(HorWipe(start=intercept, end=line[2], srow=1, erow=0))
-        else:
-            if theta < 0:
+    try:
+        for line in lines:
+            if float(line[0]-line[2]) == 0:
+                transitionList.append(Cut(start=line[0]))
+                continue
+            x = float((line[3] - line[1]) / (line[2] - line[0]))
+            b = float(line[1] - (x * line[0]))
+            intercept = int((-1 * b) / x)
+            theta = math.atan(x)  # slope is tan(theta), so calculate theta and see if its positive or neg
+            print("Theta is", theta)
+            if theta > 0:
                 if col:
-                    transitionList.append(ColWipe(start=intercept, end=line[2], scol=0, ecol=1))
+                    transitionList.append(ColWipe(start=line[0], end=intercept, scol=1, ecol=0))
                 else:
-                    transitionList.append(HorWipe(start=line[0], end=intercept, srow=0, erow=1))
+                    transitionList.append(HorWipe(start=intercept, end=line[2], srow=1, erow=0))
+            else:
+                if theta < 0:
+                    if col:
+                        transitionList.append(ColWipe(start=intercept, end=line[2], scol=0, ecol=1))
+                    else:
+                        transitionList.append(HorWipe(start=line[0], end=intercept, srow=0, erow=1))
     # self.listOfTransitions.append(tempTransition)
+    except:
+        return []
     print("list of transitions: ", transitionList)
     return transitionList
 
