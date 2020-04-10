@@ -5,7 +5,8 @@ from sklearn.linear_model import LinearRegression
 from src.transitions import *
 import cv2
 import numpy as np
-
+import statistics
+import matplotlib.pyplot as plt
 
 # main function for command line
 def detect_transitions(colsti, rowsti) -> list:
@@ -23,7 +24,7 @@ def detect_transitions(colsti, rowsti) -> list:
 def _detect_lines(sti) -> list:
     lines, height = _simple_line_detection(sti)
     groups = _first_pass_group(lines)
-    lines = _combine_lines(groups)
+    lines = _combine_lines(groups, sti)
     _weed_false_positives(lines, height)
     _extrapolate_end_points(lines)
     return lines
@@ -46,8 +47,19 @@ def _simple_line_detection(sti) -> (list, int):
     threshold = int(0.4 * height)  # seems like a sweet spot
     min_line_length = 20
     max_line_gap = 2
+    line_image = np.copy(img)
     lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                              min_line_length, max_line_gap)
+    for line in lines_:
+        for x1, y1, x2, y2 in line:
+            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+    lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
+    cv2.imshow("lala", lines_edges)
+    cv2.waitKey(0)
+    print("####################")
+    print(lines_)
+    print("####################")
+
     if type(lines_) is np.ndarray:
         return list(lines_), height
     print("No transition found")
@@ -94,35 +106,80 @@ def _first_pass_group(lines) -> list:
 # ALL combine_lines have the same input and output, just different methods of achieving
 # # this is just an easy way to toggle between them and see which is better
 # # maybe later we will make the combiner a toggle
-def _combine_lines(groups) -> list:
-    return _combine_lines_regression(groups)
+def _combine_lines(groups,sti) -> list:
+    return _combine_lines_regression(groups, sti)
 
 
 # check each group to see if any of the lines can be combined, return list of lines
-def _combine_lines_regression(groups) -> list:
+def _combine_lines_regression(groups, sti) -> list:
     print("Running Linear regression..")
     xList = []
     yList = []
-    #   preparing the data
-    for lines in groups:
-        for line in lines:
-            xList.append(line[0])
-            xList.append(line[2])
-            yList.append(line[1])
-            yList.append(line[3])
-    # add salt as needed
-    x = np.array(xList).reshape(-1, 1)
-    y = np.array(yList)
 
+    i = -1
+    #   reading the sti
+    for row in sti:
+        i += 1
+        j = 0
+        for x in row:
+            j += 1
+            if x.all() == 0:
+                xList.append(i)
+                yList.append(j)
+
+    deleted = True
+
+    while deleted:
+        print("length is: ", len(xList))
+        x = np.array(xList)
+        y = np.array(yList)
     #   setup LR model
-    model = LinearRegression().fit(x, y)
+        slope,b = np.polyfit(x, y, 1)
 
-    print("Linear regression ended with a score: ", model.score(x, y))
-    slope = model.coef_
-    b = model.intercept_
-    print("slope: ", slope)
-    print("b: ", b)
+        #only for plotting:
+        coef= np.polyfit(x, y, 1)
+        poly1d_fn = np.poly1d(coef)
 
+        xList, yList, deleted = deleteOutliers(slope=slope, b=b, xlist=xList, yList=yList)
+
+    plt.plot(x, y, 'yo', x, poly1d_fn(x), '--k')
+    plt.xlim(-2, 30)
+    plt.ylim(-5, 100)
+    plt.show()
+    return []
+
+def deleteOutliers(slope, b, xlist, yList) -> (list,list,bool):
+    distance = []
+    for i in range(0, len(xlist)):
+        numerator = math.fabs((slope*xlist[i]) + ((-1)*yList[i]) + b)
+        denom = math.sqrt((slope*slope) + 1)
+        distance.append(float(numerator/denom))
+
+    distance.sort()
+    q1 = float(np.quantile(distance, .25))
+    q3 = float(np.quantile(distance, .75))
+    print("q1: ", q1, " q3: ", q3)
+    iqr = float(q3-q1)
+    print("iqr: ", iqr)
+    maxDist = float(q3 + (1.5*iqr))
+    deleted = False
+    i = 0
+    k = []
+    maxRemoveAllowed = 7
+    print("max dist is: ", maxDist)
+    for x in distance:
+        if x > maxDist:
+            if len(k) > maxRemoveAllowed:
+                break
+            k.append(i)
+            deleted = True
+        i += 1
+    k.sort(reverse=True)
+    for i in k:
+        del distance[i]
+        del xlist[i]
+        del yList[i]
+    return xlist, yList, deleted
 
 
 # feel free to add another method
