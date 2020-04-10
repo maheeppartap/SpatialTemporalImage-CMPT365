@@ -5,10 +5,8 @@
 """
 import cv2
 
-from src.transitions import Transition
+from src.transitions import *
 from src.videoSpecs import VideoSpecs
-from src.transitions import ColWipe
-from src.transitions import EmptyTrans
 
 
 #: :type: list of Transition
@@ -36,11 +34,13 @@ def enhance(filename: str, transitions: list, outfile=None):
     out = cv2.VideoWriter(outfile, fourcc, fps, (width, height))
 
     # for testing purposes
-    transitions.append(ColWipe(35, 76, 0, 1))
+    transitions.append(Cut(45))
     i = 0
     index = 0
-
     transitions.append(EmptyTrans())
+
+    for trans in transitions:
+        trans.compute_statics()
 
     while vidCapture.isOpened():
         # Capture frame-by-frame
