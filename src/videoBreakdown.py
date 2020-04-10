@@ -4,7 +4,13 @@ import cv2
 import numpy as np
 
 
-def breakdowntoSTI(filename: str, height=64, thresh=0.75):
+def breakdowntoSTI(filename: str, height=64, ibm=False, thresh=None):
+    if not thresh:
+        if ibm:
+            thresh = 0.75
+        else:
+            thresh = 0.7
+
     vidCapture = cv2.VideoCapture(filename)
     # Check if camera opened successfully
     if not vidCapture.isOpened():
@@ -56,13 +62,17 @@ def breakdowntoSTI(filename: str, height=64, thresh=0.75):
 
             # create a column of our column sti
             for i in range(width):
-                # intersect = hist_inter(height, prevcolhists[i], colhists[i])
-                intersect = 1 - ibm_hist_diff(A, height, prevcolhists[i], colhists[i])
+                if ibm:
+                    intersect = 1 - ibm_hist_diff(A, height, prevcolhists[i], colhists[i])
+                else:
+                    intersect = hist_inter(height, prevcolhists[i], colhists[i])
                 colsti[i][index] = (intersect > thresh) * 255
 
             for i in range(height):
-                # intersection = hist_inter(width, prevrowhists[i], rowhists[i])
-                intersect = 1 - ibm_hist_diff(A, width, prevrowhists[i], rowhists[i])
+                if ibm:
+                    intersect = 1 - ibm_hist_diff(A, width, prevrowhists[i], rowhists[i])
+                else:
+                    intersect = hist_inter(width, prevrowhists[i], rowhists[i])
                 rowsti[i][index] = (intersect > thresh) * 255
 
             # reset for next loop
@@ -83,8 +93,8 @@ def breakdowntoSTI(filename: str, height=64, thresh=0.75):
     # display()
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
-    cv2.imwrite("testSTI/cutC.png", colsti)
-    cv2.imwrite("testSTI/cutR.png", rowsti)
+    cv2.imwrite("C.png", colsti)
+    cv2.imwrite("R.png", rowsti)
     return colsti, rowsti
 
 

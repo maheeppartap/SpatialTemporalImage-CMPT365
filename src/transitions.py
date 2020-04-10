@@ -1,3 +1,6 @@
+import math
+
+
 class Transition:
     vidspec = None
 
@@ -32,6 +35,10 @@ class Transition:
     def _percent_complete(self, frame):
         return (frame - self.start) / (self.end - self.start)
 
+    # we need this because some transitions need fps to compute their start value
+    def compute_statics(self):
+        pass
+
 
 # utility methods
 def _width_cap(col) -> int:
@@ -58,7 +65,7 @@ def _blend_p(i, s, a) -> float:
 
 
 def _blend(frame, p, r, g, b):
-    q = 1-p
+    q = 1 - p
     frame[0] = q * frame[0] + p * r
     frame[1] = q * frame[1] + p * g
     frame[2] = q * frame[2] + p * b
@@ -141,9 +148,68 @@ class HorWipe(Transition):
 
 
 class Cut(Transition):
-    def __init__(self, start: int, r=255, g=128, b=70):
+    duration = 2
+    max_height = 0.3
+
+    def __init__(self, start: int, r=255, g=192, b=203):
+        self.at = 0
+        self.bt = 0
+        self.ct = 0
+        self.a = 0
+        self.a2 = 0
+        self.b = 0
+        self.b2 = 0
+        self.hw = 0
+        self.hh = 0
+        self.max_distance = 0
         # make cut 1 second wide so we can enhance it more
+        # todo: somehow make this dependant on fps
         super().__init__(start, start, r, g, b)
+
+    def _distance_to_ellipse(self, rows, cols):
+        # use an iterative method to solve for distance to ellipse
+        px = abs(cols - self.hw)
+        py = abs(rows - self.hh)
+        tx = 0.707
+        ty = 0.707
+        for x in range(0, 3):
+            x = self.a * tx
+            y = self.b * ty
+
+            ex = (self.a2 - self.b2) * tx ** 3 / self.a
+            ey = (self.b2 - self.a2) * ty ** 3 / self.b
+
+            rx = x - ex
+            ry = y - ey
+
+            qx = px - ex
+            qy = py - ey
+
+            r = math.hypot(ry, rx)
+            q = math.hypot(qy, qx)
+
+            tx = min(1, max(0, (qx * r / q + ex) / self.a))
+            ty = min(1, max(0, (qy * r / q + ey) / self.b))
+            t = math.hypot(ty, tx)
+            tx /= t
+            ty /= t
+
+        tx = math.copysign(self.a * tx, cols)
+        ty = math.copysign(self.b * ty, rows)
+        return math.sqrt((tx-px)*(tx-px) + ((ty-py)*(ty-py)))
+
+    def _set_ellipse_eqn(self, t):
+        self.b = self.at * (t * t) + self.bt * t + self.ct
+        self.a = self.b * Transition.vidspec.width / Transition.vidspec.height
+        self.a2 = self.a * self.a
+        self.b2 = self.b * self.b
+        self.max_distance = self._distance_to_ellipse(0, 0)
+
+    def _blend_p(self, rows, cols):
+        if (cols - self.hw)*(cols-self.hw) / self.a2 + (rows-self.hh)*(rows-self.hh) / self.b2 < 1:
+            return 0
+        else:
+            return self._distance_to_ellipse(rows, cols)/self.max_distance
 
     def draw_on_frame(self, frame, frame_ind) -> bool:
         super().draw_on_frame(frame, frame_ind)
@@ -153,7 +219,36 @@ class Cut(Transition):
         elif t > 1:
             return True
 
+        self._set_ellipse_eqn(t)
+        i = 0
+        while i < Transition.vidspec.height:
+            j = 0
+            flipped = False
+            while j < Transition.vidspec.width:
+                p = self._blend_p(i, j)
+                if p == 0:
+                    # take advantage of the symmetric nature of our ellipse
+                    if flipped:
+                        i = Transition.vidspec.height-i
+                        break
+                    else:
+                        j = Transition.vidspec.width-j+1
+                        continue
+
+                _blend(frame[i][j], p, self.r, self.g, self.b)
+                j += 1
+            i += 1
+
         return False
+
+    def compute_statics(self):
+        self.start -= int(self.duration / 2 * Transition.vidspec.fps)
+        self.end += int(self.duration / 2 * Transition.vidspec.fps)
+        self.at = Transition.vidspec.height * -2 * (1 - self.max_height - math.sqrt(2))
+        self.bt = -1 * self.at
+        self.ct = math.sqrt(2) / 2 * Transition.vidspec.height
+        self.hw = Transition.vidspec.width / 2
+        self.hh = Transition.vidspec.height / 2
 
 
 # Null transition to mark end of transitions

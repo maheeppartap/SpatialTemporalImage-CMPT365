@@ -111,13 +111,13 @@ def _combine_lines_regression(groups) -> list:
             yList.append(line[1])
             yList.append(line[3])
     # add salt as needed
-    x = np.array(xList).reshape(-1,1)
+    x = np.array(xList).reshape(-1, 1)
     y = np.array(yList)
 
     #   setup LR model
-    model = LinearRegression().fit(x,y)
+    model = LinearRegression().fit(x, y)
 
-    print("Linear regression ended with a score: ", model.score(x,y))
+    print("Linear regression ended with a score: ", model.score(x, y))
     slope = model.coef_
     b = model.intercept_
     print("slope: ", slope)

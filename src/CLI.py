@@ -16,11 +16,11 @@ def main():
     # va = VideoAnalysis(filepath)
     # va.analyse()
     filepath = get_full_name(filepath)
-    start = time()
-    breakdowntoSTI(filepath)
-    end = time()
-    print(end-start)
-    # enhance(filepath, [], outfile)
+    # start = time()
+    # breakdowntoSTI(filepath)
+    # end = time()
+    # print(end-start)
+    enhance(filepath, [], outfile)
 
 
 def get_full_name(filename):
