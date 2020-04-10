@@ -25,7 +25,8 @@ def _detect_lines(sti) -> list:
     lines, height = _simple_line_detection(sti)
     groups = _first_pass_group(lines)
     lines = _combine_lines(groups, sti)
-    _weed_false_positives(lines, height)
+    #finalLines = _weed_false_positives(lines, height)  #no lines are passing the test, so comment for now
+    _linear_regression_(lines)
     _extrapolate_end_points(lines)
     return lines
 
@@ -107,12 +108,34 @@ def _first_pass_group(lines) -> list:
 # # this is just an easy way to toggle between them and see which is better
 # # maybe later we will make the combiner a toggle
 def _combine_lines(groups,sti) -> list:
-    return _combine_lines_regression(groups, sti)
+    return _combine_lines_thresholded(groups)
 
+
+def _linear_regression_(lines) -> list:
+    print("Running linear regression..")
+    print(lines)
+    xlist = []
+    ylist = []
+
+    for line in lines:
+        xlist.append(line[0])
+        ylist.append(line[1])
+        xlist.append(line[2])
+        ylist.append(line[3])
+
+    x = np.array(xlist)
+    y = np.array(ylist)
+    try:
+        coef = np.polyfit(x,y,1)
+        poly1d_fn = np.poly1d(coef)
+    except:
+        return []
+    plt.plot(x, y, 'yo', x, poly1d_fn(x), '--k')
+    plt.show()
 
 # check each group to see if any of the lines can be combined, return list of lines
-def _combine_lines_regression(groups, sti) -> list:
-    print("Running Linear regression..")
+def _linear_regression_with_elemination_(groups, sti) -> list:
+    print("Running Linear regression with elimination..")
     xList = []
     yList = []
 
@@ -199,7 +222,8 @@ def _combine_lines_thresholded(groups) -> list:
 
 # remove any lines that appear to be false positives
 def _weed_false_positives(lines, height) -> list:
-    threshConst = 0.7
+    threshConst = 0.5
+    print("print final lines", lines)
     Threshold = threshConst * height
     finalList = []
     try:
@@ -209,6 +233,7 @@ def _weed_false_positives(lines, height) -> list:
                 finalList.append(line)
     except:
         return []
+
     return finalList
 
 
