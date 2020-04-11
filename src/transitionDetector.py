@@ -1,12 +1,12 @@
 # returns a list of transitions
 import math
 import os
-from sklearn.linear_model import LinearRegression
 from src.transitions import *
 import cv2
 import numpy as np
 import statistics
 import matplotlib.pyplot as plt
+
 
 # main function for command line
 def detect_transitions(colsti, rowsti) -> list:
@@ -80,7 +80,7 @@ def _first_pass_group(lines) -> list:
     # comparing the lines with with all others
     for line in lines[:]:
         groups_ = [line[0]]
-        if float(line[0][2]-line[0][0]) == 0:
+        if float(line[0][2] - line[0][0]) == 0:
             groups.append(groups_)
             continue
         lines_ = np.delete(lines_, 0, 0)  # making sure the checks are not repeated,
@@ -164,11 +164,11 @@ def _linear_regression_with_elemination_(groups, sti) -> list:
         print("length is: ", len(xList))
         x = np.array(xList)
         y = np.array(yList)
-    #   setup LR model
-        slope,b = np.polyfit(x, y, 1)
+        #   setup LR model
+        slope, b = np.polyfit(x, y, 1)
 
-        #only for plotting:
-        coef= np.polyfit(x, y, 1)
+        # only for plotting:
+        coef = np.polyfit(x, y, 1)
         poly1d_fn = np.poly1d(coef)
 
         xList, yList, deleted = deleteOutliers(slope=slope, b=b, xlist=xList, yList=yList)
@@ -179,20 +179,21 @@ def _linear_regression_with_elemination_(groups, sti) -> list:
     plt.show()
     return []
 
-def deleteOutliers(slope, b, xlist, yList) -> (list,list,bool):
+
+def deleteOutliers(slope, b, xlist, yList) -> (list, list, bool):
     distance = []
     for i in range(0, len(xlist)):
-        numerator = math.fabs((slope*xlist[i]) + ((-1)*yList[i]) + b)
-        denom = math.sqrt((slope*slope) + 1)
-        distance.append(float(numerator/denom))
+        numerator = math.fabs((slope * xlist[i]) + ((-1) * yList[i]) + b)
+        denom = math.sqrt((slope * slope) + 1)
+        distance.append(float(numerator / denom))
 
     distance.sort()
     q1 = float(np.quantile(distance, .25))
     q3 = float(np.quantile(distance, .75))
     print("q1: ", q1, " q3: ", q3)
-    iqr = float(q3-q1)
+    iqr = float(q3 - q1)
     print("iqr: ", iqr)
-    maxDist = float(q3 + (1.5*iqr))
+    maxDist = float(q3 + (1.5 * iqr))
     deleted = False
     i = 0
     k = []
@@ -255,7 +256,7 @@ def _map_lines_to_transitions(lines, col) -> list:
     transitionList = []
     try:
         for line in lines:
-            if float(line[0]-line[2]) == 0:
+            if float(line[0] - line[2]) == 0:
                 transitionList.append(Cut(start=line[0]))
                 continue
             x = float((line[3] - line[1]) / (line[2] - line[0]))

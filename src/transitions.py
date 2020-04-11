@@ -13,7 +13,7 @@ class Transition:
         self.b = b
 
     # for sorting
-    def __cmp__(self, other):
+    def __lt__(self, other):
         if other is Transition:
             return self.start - other.start
         else:

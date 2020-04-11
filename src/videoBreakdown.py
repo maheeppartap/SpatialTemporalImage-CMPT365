@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 
-def breakdowntoSTI(filename: str, height=64, ibm=False, thresh=None):
+def breakdowntoSTI(filename: str, height=64, thresh=None, ibm=False):
     if not thresh:
         if ibm:
             thresh = 0.75
@@ -93,8 +93,6 @@ def breakdowntoSTI(filename: str, height=64, ibm=False, thresh=None):
     # display()
     vidCapture.release()
     cv2.destroyAllWindows()  # just to be safe
-    cv2.imwrite("C.png", colsti)
-    cv2.imwrite("R.png", rowsti)
     return colsti, rowsti
 
 

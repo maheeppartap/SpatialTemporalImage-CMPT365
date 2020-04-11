@@ -10,14 +10,10 @@ from src.videoSpecs import VideoSpecs
 
 
 #: :type: list of Transition
-def enhance(filename: str, transitions: list, outfile=None):
+def enhance(filename: str, transitions: list, outfile:str):
     # this is probably done, but just to make sure
     # sort transitions
     transitions = sorted(transitions)
-
-    if not outfile:
-        outfile = outputfile(filename)
-
     vidCapture = cv2.VideoCapture(filename)
     # Check if camera opened successfully
     if not vidCapture.isOpened():
@@ -34,7 +30,6 @@ def enhance(filename: str, transitions: list, outfile=None):
     out = cv2.VideoWriter(outfile, fourcc, fps, (width, height))
 
     # for testing purposes
-    transitions.append(Cut(45))
     i = 0
     index = 0
     transitions.append(EmptyTrans())
@@ -59,7 +54,4 @@ def enhance(filename: str, transitions: list, outfile=None):
     # just to be safe
 
 
-# TODO: implement this
-def outputfile(filename):
-    split = filename.split(".")
-    return split[0] + "_enhanced.mp4"
+
