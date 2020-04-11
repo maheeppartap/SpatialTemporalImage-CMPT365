@@ -124,3 +124,5 @@ def ibm_hist_diff(A: np.ndarray, total: int, prevhist: np.ndarray, hist: np.ndar
 def hist_inter(total, prevhist, hist):
     return np.sum(np.minimum(prevhist, hist))/total
 
+
+breakdowntoSTI("../assets/video_1_right_wipe.mp4")
