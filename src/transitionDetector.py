@@ -23,47 +23,50 @@ def detect_transitions(colsti, rowsti) -> list:
 # type = true for col, false for row
 def _detect_lines(sti) -> list:
     lines, height = _simple_line_detection(sti)
+    print(type(lines))
+    if type(lines) is not list:
+        return []
     groups = _first_pass_group(lines)
-    #lines = _combine_lines(groups, sti)
+    lines = _combine_lines(groups, sti)
     #finalLines = _weed_false_positives(lines, height)  #no lines are passing the test, so comment for now
-    lines = _linear_regression_(groups)
     # _extrapolate_end_points(lines)
     return lines
 
 
 # use openCV to find simple lines
-def _simple_line_detection(sti) -> (list, int):
+def _simple_line_detection(sti) -> (list,int):
     # I feel like there has to be a better way lol
     cv2.imwrite("temp.png", sti)  # doing this changes it to the correct format
     img = cv2.imread("temp.png")
-    gray = img.copy()
-    kernel_size = 5  # for a 5x5 gaussian matrix for more blur, change to 3 for less blur
+    height,width,channel = img.shape
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    kernel_size = 5
     blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
-    low_threshold = 20
+    low_threshold = 50
     high_threshold = 150
     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
-    height, width, channels = img.shape
     rho = 1
     theta = np.pi / 180
-    threshold = int(0.4 * height)  # seems like a sweet spot
-    min_line_length = 20
-    max_line_gap = 2
-    line_image = np.copy(img)
-    lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
-                             min_line_length, max_line_gap)
-    if type(lines_) is not np.ndarray:
-        return [],[]
-    for line in lines_:
-        for x1, y1, x2, y2 in line:
-            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
-    lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
-    # cv2.imshow("lala", lines_edges)
-    cv2.waitKey(0)
-    if type(lines_) is np.ndarray:
-        return list(lines_), height
-    print("No transition found")
-    exit(1)  # exit if no transitions
+    threshold = 15
+    min_line_length = float(0.7*height)
+    max_line_gap = 20
+    line_image = np.copy(img) * 0
+    lines = []
+    lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                            min_line_length, max_line_gap)
+    try:
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
 
+        lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
+        cv2.imshow("ss", lines_edges)
+        lines = lines.tolist()
+        cv2.waitKey(0)
+    except TypeError:
+        print("no transitions found")
+    os.remove("temp.png")
+    return lines, height
 
 # group the lines into groups based on how close they are, order by first point
 # returns list of groups, (where a group is a list of lines that are close)
@@ -106,7 +109,7 @@ def _first_pass_group(lines) -> list:
 # # this is just an easy way to toggle between them and see which is better
 # # maybe later we will make the combiner a toggle
 def _combine_lines(groups,sti) -> list:
-    return _combine_lines_thresholded(groups)
+    return _linear_regression_(groups)
 
 
 def _linear_regression_(groups) -> list:
