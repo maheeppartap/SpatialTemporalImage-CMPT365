@@ -10,7 +10,7 @@ def main():
     print("Python version: " + str(sys.version))
     print("OpenCV version: " + str(cv2.__version__))
 
-    detect_transitions(cv2.imread("../assets/lalalalalaalala.png"), cv2.imread("../assets/testSTI/lrC.png"))
+    detect_transitions(cv2.imread("../assets/testSTI/C.png"), cv2.imread("../assets/testSTI/lrC.png"))
     # mainGUI().run()
     # videoBreakDown()
 

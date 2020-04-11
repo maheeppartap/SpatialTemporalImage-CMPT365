@@ -24,10 +24,10 @@ def detect_transitions(colsti, rowsti) -> list:
 def _detect_lines(sti) -> list:
     lines, height = _simple_line_detection(sti)
     groups = _first_pass_group(lines)
-    lines = _combine_lines(groups, sti)
+    #lines = _combine_lines(groups, sti)
     #finalLines = _weed_false_positives(lines, height)  #no lines are passing the test, so comment for now
-    _linear_regression_(lines)
-    _extrapolate_end_points(lines)
+    lines = _linear_regression_(groups)
+    # _extrapolate_end_points(lines)
     return lines
 
 
@@ -51,16 +51,14 @@ def _simple_line_detection(sti) -> (list, int):
     line_image = np.copy(img)
     lines_ = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                              min_line_length, max_line_gap)
+    if type(lines_) is not np.ndarray:
+        return [],[]
     for line in lines_:
         for x1, y1, x2, y2 in line:
             cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
     lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
-    cv2.imshow("lala", lines_edges)
+    # cv2.imshow("lala", lines_edges)
     cv2.waitKey(0)
-    print("####################")
-    print(lines_)
-    print("####################")
-
     if type(lines_) is np.ndarray:
         return list(lines_), height
     print("No transition found")
@@ -111,28 +109,35 @@ def _combine_lines(groups,sti) -> list:
     return _combine_lines_thresholded(groups)
 
 
-def _linear_regression_(lines) -> list:
+def _linear_regression_(groups) -> list:
     print("Running linear regression..")
-    print(lines)
+    print(groups)
     xlist = []
     ylist = []
+    finalLine = []
+    beginFrame = []
+    for group in groups:
+        for line in group:
+            xlist.append(line[0])
+            ylist.append(line[1])
+            xlist.append(line[2])
+            ylist.append(line[3])
+            x = np.array(xlist)
+            y = np.array(ylist)
+        try:
+            xmax = max(xlist)
+            xmin = min(xlist)
+            coef = np.polyfit(x,y,1)
+            print("coeff is: ", coef)
+            poly1d_fn = np.poly1d(coef)
+            newL = [xmin, poly1d_fn(xmin), xmax, poly1d_fn(xmax)]
+            finalLine.append(newL)
+        except:
+            continue
+        plt.plot(x, y, 'yo', x, poly1d_fn(x), '--k')
+        #plt.show()
 
-    for line in lines:
-        xlist.append(line[0])
-        ylist.append(line[1])
-        xlist.append(line[2])
-        ylist.append(line[3])
-
-    x = np.array(xlist)
-    y = np.array(ylist)
-    try:
-        coef = np.polyfit(x,y,1)
-        poly1d_fn = np.poly1d(coef)
-    except:
-        return []
-    plt.plot(x, y, 'yo', x, poly1d_fn(x), '--k')
-    plt.show()
-
+    return finalLine
 # check each group to see if any of the lines can be combined, return list of lines
 def _linear_regression_with_elemination_(groups, sti) -> list:
     print("Running Linear regression with elimination..")
@@ -252,6 +257,8 @@ def _map_lines_to_transitions(lines, col) -> list:
                 continue
             x = float((line[3] - line[1]) / (line[2] - line[0]))
             b = float(line[1] - (x * line[0]))
+            intercept = int((-1 * b) / x)
+            print("lines are: ", line)
             intercept = int((-1 * b) / x)
             theta = math.atan(x)  # slope is tan(theta), so calculate theta and see if its positive or neg
             print("Theta is", theta)
