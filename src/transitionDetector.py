@@ -28,7 +28,7 @@ def _detect_lines(sti) -> list:
         return []
     groups = _first_pass_group(lines)
     lines = _combine_lines(groups, sti)
-    #finalLines = _weed_false_positives(lines, height)  #no lines are passing the test, so comment for now
+    finalLines = _weed_false_positives(lines, height)
     # _extrapolate_end_points(lines)
     return lines
 
@@ -47,7 +47,7 @@ def _simple_line_detection(sti) -> (list,int):
     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
     rho = 1
     theta = np.pi / 180
-    threshold = 15
+    threshold = 50
     min_line_length = float(0.7*height)
     max_line_gap = 20
     line_image = np.copy(img) * 0
@@ -120,6 +120,8 @@ def _linear_regression_(groups) -> list:
     finalLine = []
     beginFrame = []
     for group in groups:
+        xlist = []
+        ylist = []
         for line in group:
             xlist.append(line[0])
             ylist.append(line[1])
@@ -137,10 +139,11 @@ def _linear_regression_(groups) -> list:
             finalLine.append(newL)
         except:
             continue
-        plt.plot(x, y, 'yo', x, poly1d_fn(x), '--k')
+        # plt.plot(x, y, 'yo', x, poly1d_fn(x), '--k')
         #plt.show()
 
     return finalLine
+
 # check each group to see if any of the lines can be combined, return list of lines
 def _linear_regression_with_elemination_(groups, sti) -> list:
     print("Running Linear regression with elimination..")
@@ -231,15 +234,26 @@ def _combine_lines_thresholded(groups) -> list:
 
 # remove any lines that appear to be false positives
 def _weed_false_positives(lines, height) -> list:
-    threshConst = 0.5
+    threshConst = 0.8*height
     print("print final lines", lines)
     Threshold = threshConst * height
     finalList = []
+
     try:
         for line in lines:
-            dist = float(math.sqrt(math.fabs((line[2] - line[0]) * (line[2] - line[0]) - (line[3] - line[1]) * (line[3] - line[1]))))
-            if dist > Threshold:
+            dist = float(math.sqrt(math.fabs(((line[2] - line[0]) * (line[2] - line[0])) - ((line[3] - line[1]) * (line[3] - line[1])))))
+            isTooClose = True
+            i = 0
+            for x in lines:
+                if x[0]-line[0] < 60:
+                    i+=1
+                    if i == 2:
+                        isTooClose = False
+                        break
+
+            if dist > Threshold and isTooClose:
                 finalList.append(line)
+
     except:
         return []
 
@@ -261,22 +275,21 @@ def _map_lines_to_transitions(lines, col) -> list:
                 continue
             x = float((line[3] - line[1]) / (line[2] - line[0]))
             b = float(line[1] - (x * line[0]))
-            intercept = int((-1 * b) / x)
             print("lines are: ", line)
             intercept = int((-1 * b) / x)
             theta = math.atan(x)  # slope is tan(theta), so calculate theta and see if its positive or neg
             print("Theta is", theta)
             if theta > 0:
                 if col:
-                    transitionList.append(ColWipe(start=line[0], end=intercept, scol=1, ecol=0))
+                    transitionList.append(ColWipe(start=line[0], end=line[2], scol=1, ecol=0))
                 else:
-                    transitionList.append(HorWipe(start=intercept, end=line[2], srow=1, erow=0))
+                    transitionList.append(HorWipe(start=line[0], end=line[2], srow=1, erow=0))
             else:
                 if theta < 0:
                     if col:
-                        transitionList.append(ColWipe(start=intercept, end=line[2], scol=0, ecol=1))
+                        transitionList.append(ColWipe(start=line[0], end=line[2], scol=0, ecol=1))
                     else:
-                        transitionList.append(HorWipe(start=line[0], end=intercept, srow=0, erow=1))
+                        transitionList.append(HorWipe(start=line[0], end=line[2], srow=0, erow=1))
     # self.listOfTransitions.append(tempTransition)
     except:
         return []
