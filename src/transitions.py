@@ -14,10 +14,7 @@ class Transition:
 
     # for sorting
     def __lt__(self, other):
-        if other is Transition:
-            return self.start - other.start
-        else:
-            return 0
+        return self.start < other.start
 
     def set_rgb(self, r: int, g: int, b: int):
         self.r = r
@@ -148,7 +145,7 @@ class HorWipe(Transition):
 
 
 class Cut(Transition):
-    duration = 2
+    duration = 0.7
     max_height = 0.3
 
     def __init__(self, start: int, r=255, g=192, b=203):
@@ -242,8 +239,10 @@ class Cut(Transition):
         return False
 
     def compute_statics(self):
-        self.start -= int(self.duration / 2 * Transition.vidspec.fps)
+        self.start -= int((self.duration / 2) * Transition.vidspec.fps)
+        self.start = max(0, self.start)
         self.end += int(self.duration / 2 * Transition.vidspec.fps)
+        self.end = min(Transition.vidspec.frames, self.end)
         self.at = Transition.vidspec.height * -2 * (1 - self.max_height - math.sqrt(2))
         self.bt = -1 * self.at
         self.ct = math.sqrt(2) / 2 * Transition.vidspec.height

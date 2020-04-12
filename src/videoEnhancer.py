@@ -11,9 +11,6 @@ from src.videoSpecs import VideoSpecs
 
 #: :type: list of Transition
 def enhance(filename: str, transitions: list, outfile:str):
-    # this is probably done, but just to make sure
-    # sort transitions
-    transitions = sorted(transitions)
     vidCapture = cv2.VideoCapture(filename)
     # Check if camera opened successfully
     if not vidCapture.isOpened():
@@ -32,10 +29,13 @@ def enhance(filename: str, transitions: list, outfile:str):
     # for testing purposes
     i = 0
     index = 0
-    transitions.append(EmptyTrans())
-
+    # make sure starts and ends are computed
     for trans in transitions:
         trans.compute_statics()
+    # sort by starts and ends
+    transitions = sorted(transitions)
+    # add an empty transition at the end to avoid index out of bound error
+    transitions.append(EmptyTrans())
 
     while vidCapture.isOpened():
         # Capture frame-by-frame

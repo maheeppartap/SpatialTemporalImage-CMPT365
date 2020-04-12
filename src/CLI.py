@@ -7,11 +7,16 @@ import cv2
 from src.videoEnhancer import enhance
 from src.videoBreakdown import breakdowntoSTI
 from src.transitionDetector import detect_transitions
+from src.transitions import ColWipe, HorWipe, Cut
 
 
 def main():
     overall_start = time()
     args = parse_args()
+    transitions = [ColWipe(0, 30, 0, 1), Cut(90)]
+    enhance(args.filename, transitions, args.output)
+    return
+
     row_path = append_to_filename(args.filename, "rowsti", "png")
     col_path = append_to_filename(args.filename, "colsti", "png")
 
