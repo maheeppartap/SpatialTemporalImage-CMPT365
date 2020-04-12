@@ -4,10 +4,10 @@ from time import time
 
 import cv2
 
-from src.videoEnhancer import enhance
-from src.videoBreakdown import breakdowntoSTI
-from src.transitionDetector import detect_transitions
-from src.transitions import ColWipe, HorWipe, Cut
+from videoEnhancer import enhance
+from videoBreakdown import breakdowntoSTI
+from transitionDetector import detect_transitions
+from transitions import ColWipe, HorWipe, Cut
 
 
 def main():

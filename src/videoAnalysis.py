@@ -5,7 +5,7 @@ import os
 from matplotlib import pyplot as plt
 from src.transitions import *
 import random
-from src.videoBreakdown import breakdowntoSTI
+from videoBreakdown import breakdowntoSTI
 
 class VideoAnalysis:
     def __init__(self, filename, thresh=0.7, size=64):

@@ -1,11 +1,10 @@
-# returns a list of transitions
-import math
 import os
-from src.transitions import *
+
 import cv2
-import numpy as np
-import statistics
 import matplotlib.pyplot as plt
+import numpy as np
+
+from transitions import *
 
 
 # main function for command line

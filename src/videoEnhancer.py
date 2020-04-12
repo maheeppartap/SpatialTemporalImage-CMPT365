@@ -5,8 +5,8 @@
 """
 import cv2
 
-from src.transitions import *
-from src.videoSpecs import VideoSpecs
+from transitions import *
+from videoSpecs import VideoSpecs
 
 
 #: :type: list of Transition
