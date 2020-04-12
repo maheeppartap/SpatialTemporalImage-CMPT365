@@ -93,7 +93,7 @@ def parse_args():
                                                                            "considered abnormally low")
     parser.add_argument("-i", "--ibm", action="store_true", help="use ibm histogram difference method instead of "
                                                                  "histogram intersection method")
-    parser.add_argument("-p", "-prominence", type=int, choices=range(1, 10), help="a number between 1 and 10 "
+    parser.add_argument("-p", "--prominence", type=int, choices=range(1, 11), help="a number between 1 and 10 "
                                                                                   "representing how prominently "
                                                                                   "enhanced the output video should "
                                                                                   "be")

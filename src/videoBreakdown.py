@@ -123,4 +123,3 @@ def hist_inter(total, prevhist, hist):
     return np.sum(np.minimum(prevhist, hist))/total
 
 
-breakdowntoSTI("../assets/video_1_right_wipe.mp4")
