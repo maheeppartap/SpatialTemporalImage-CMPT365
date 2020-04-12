@@ -47,7 +47,7 @@ def _simple_line_detection(sti) -> (list,int):
     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
     rho = 1
     theta = np.pi / 180
-    threshold = 50
+    threshold = 40
     min_line_length = float(0.7*height)
     max_line_gap = 20
     line_image = np.copy(img) * 0
@@ -281,15 +281,15 @@ def _map_lines_to_transitions(lines, col) -> list:
             print("Theta is", theta)
             if theta > 0:
                 if col:
-                    transitionList.append(ColWipe(start=line[0], end=line[2], scol=1, ecol=0))
+                    transitionList.append(ColWipe(start=line[0], end=line[2], scol=0, ecol=1))
                 else:
-                    transitionList.append(HorWipe(start=line[0], end=line[2], srow=1, erow=0))
+                    transitionList.append(HorWipe(start=line[0], end=line[2], srow=0, erow=1))
             else:
                 if theta < 0:
                     if col:
-                        transitionList.append(ColWipe(start=line[0], end=line[2], scol=0, ecol=1))
+                        transitionList.append(ColWipe(start=line[0], end=line[2], scol=1, ecol=0))
                     else:
-                        transitionList.append(HorWipe(start=line[0], end=line[2], srow=0, erow=1))
+                        transitionList.append(HorWipe(start=line[0], end=line[2], srow=1, erow=0))
     # self.listOfTransitions.append(tempTransition)
     except:
         return []
