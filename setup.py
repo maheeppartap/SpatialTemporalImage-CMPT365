@@ -21,7 +21,7 @@ setup(
              'src/videoBreakdown.py',
              'src/videoSpecs.py'
              ],
-
+    package_data={'src': ['../assets/colors.dat']},
     entry_points={
       'console_scripts': [
           'TRANSformer = CLI:main'
