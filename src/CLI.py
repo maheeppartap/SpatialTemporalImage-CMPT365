@@ -8,12 +8,12 @@ from videoEnhancer import enhance
 from videoBreakdown import breakdowntoSTI
 from transitionDetector import detect_transitions
 from transitions import ColWipe, HorWipe, Cut
-
+import warnings
 
 def main():
     overall_start = time()
     args = parse_args()
-
+    warnings.filterwarnings("ignore")
 
     row_path = append_to_filename(args.filename, "rowsti", "png")
     col_path = append_to_filename(args.filename, "colsti", "png")
