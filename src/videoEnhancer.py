@@ -11,7 +11,7 @@ from randomColourGen import *
 
 
 #: :type: list of Transition
-def enhance(filename: str, transitions: list, outfile: str, resolution=720, typeCol='n'):
+def enhance(filename: str, transitions: list, outfile: str, resolution=720, theme="pastel"):
     vidCapture = cv2.VideoCapture(filename)
     # Check if camera opened successfully
     if not vidCapture.isOpened():
@@ -38,11 +38,10 @@ def enhance(filename: str, transitions: list, outfile: str, resolution=720, type
     # adding colors to transitions
 
     for trans in transitions:
-        r, g, b = color().retCol(typeCol)
+        r, g, b = color().retCol(theme)
         trans.set_rgb(r, g, b)
-    # make sure starts and ends are computed
-    for trans in transitions:
         trans.compute_statics()
+
     # sort by starts and ends
     transitions = sorted(transitions)
     # add an empty transition at the end to avoid index out of bound error

@@ -50,7 +50,7 @@ def breakdowntoSTI(filename: str, height=64, thresh=None, ibm=False):
                         r = 0
                         g = 0
                     else:
-                        r = frame[i][j][0] / total
+                        r = frame[i][j][2] / total
                         g = frame[i][j][1] / total
                     # quantize chromaticity
                     rN = int(min(r * N, N-1))

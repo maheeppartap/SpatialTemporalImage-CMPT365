@@ -63,9 +63,9 @@ def _blend_p(i, s, a) -> float:
 
 def _blend(frame, p, r, g, b):
     q = 1 - p
-    frame[0] = q * frame[0] + p * r
+    frame[2] = q * frame[2] + p * r
     frame[1] = q * frame[1] + p * g
-    frame[2] = q * frame[2] + p * b
+    frame[0] = q * frame[0] + p * b
 
 
 class ColWipe(Transition):

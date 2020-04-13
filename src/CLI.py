@@ -27,7 +27,7 @@ def main():
         if args.verbose:
             print("Beginning video breakdown to Spatial-Temporal images.")
             print("Breaking down video: " + args.filename)
-            print("Resizing video to height=" + str(args.filename))
+            print("Resizing video to height=" + str(args.size))
             print("Using histogram intersection threshold of: " + str(args.threshold))
             if args.ibm:
                 print("Using ibm colour histogram difference method.")
@@ -63,7 +63,7 @@ def main():
             print("Beginning video enhancement.")
             print("This may take a while please be patient...")
         start = time()
-        enhance(args.filename, transitions, args.output, args.resolution)
+        enhance(args.filename, transitions, args.output, args.resolution, args.colour)
         diff = time() - start
         if args.verbose:
             print("Completed in " + str(diff) + " seconds.")
@@ -99,10 +99,8 @@ def parse_args():
                                                                    "values between 0 and 100")
     parser.add_argument("-i", "--ibm", action="store_true", help="use ibm histogram difference method instead of "
                                                                  "histogram intersection method")
-    parser.add_argument("-p", "--prominence", type=int, choices=range(1, 11), help="a number between 1 and 10 "
-                                                                                  "representing how prominently "
-                                                                                  "enhanced the output video should "
-                                                                                  "be")
+    parser.add_argument("-c", "--colour", type=str, choices=["pastel", "vibrant", "neon", "grey", "lyl"],
+                        default="pastel", help="Colour theme for enhanced transitions")
     args = parser.parse_args()
     args.filename = full_name(args.filename)
     # assign default threshold when bad one is provided

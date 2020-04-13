@@ -33,41 +33,39 @@ class color:
             if col[0] == 'l':
                 self.lyl.append(col[1:])
 
-
-
-    def retCol(self, type)-> (int,int,int):
+    def retCol(self, palette) -> (int, int, int):
         random.seed()
-        if type == 'n':
+        if palette == 'neon':
             try:
                 rand = random.randint(0, len(self.neon)-1)
             except:
                 print("No neon colours. Sorry.")
                 return []
             return int(self.neon[rand][0]), int(self.neon[rand][1]), int(self.neon[rand][2])
-        if type == 'p':
+        if palette == 'pastel':
             try:
                 rand = random.randint(0, len(self.pastel)-1)
             except:
                 print("No pastel colours. Sorry.")
                 return []
             return int(self.pastel[rand][0]), int(self.pastel[rand][1]), int(self.pastel[rand][2])
-        if type == 'v':
+        if palette == 'vibrant':
             try:
                 rand = random.randint(0,len(self.vibrant)-1)
             except:
                 print("No vibrant colours. Sorry.")
                 return []
             return int(self.vibrant[rand][0]), int(self.vibrant[rand][1]), int(self.vibrant[rand][2])
-        if type== 'g':
+        if palette == 'grey':
             try:
                 rand = random.randint(0, len(self.grey)-1)
             except:
                 print("No grey colours. Sorry.")
                 return []
             return int(self.grey[rand][0]), int(self.grey[rand][1]), int(self.grey[rand][2])
-        if type == 'l':
+        if palette == 'lyl':
             try:
-                rand = random.randint(0,len(self.lyl)-1)
+                rand = random.randint(0, len(self.lyl)-1)
             except:
                 print("No lyl colours. Sorry.")
                 return []
