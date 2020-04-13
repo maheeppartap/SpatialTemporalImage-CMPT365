@@ -6,8 +6,7 @@ setup(
     description="Generates and analyzes STIs for videos and creates"
                 "a enhanced video.",
     author="Maheeppartap Singh""Conor Murphy",
-    packages=['src'
-               ],
+    packages=['src'],
     install_requires=[
         'opencv-python',
         'matplotlib',
@@ -17,11 +16,11 @@ setup(
              'src/transitionDetector.py',
              'src/videoEnhancer.py',
              'src/transitions.py',
-             'src/videoAnalysis.py',
+             'src/randomColourGen.py',
              'src/videoBreakdown.py',
              'src/videoSpecs.py'
              ],
-
+    package_data={'CLI': ['../assets/colors.dat']},
     entry_points={
       'console_scripts': [
           'TRANSformer = CLI:main'

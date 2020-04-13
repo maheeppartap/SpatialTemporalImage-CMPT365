@@ -9,7 +9,7 @@ import random
 
 class color:
     def __init__(self):
-        with open('../assets/colors.dat') as f:
+        with open('assets/colors.dat') as f:
             array = [[x for x in line.split()] for line in f]
 
         self.neon = []
