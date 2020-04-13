@@ -10,14 +10,19 @@ from videoSpecs import VideoSpecs
 
 
 #: :type: list of Transition
-def enhance(filename: str, transitions: list, outfile:str):
+def enhance(filename: str, transitions: list, outfile: str, resolution=720):
     vidCapture = cv2.VideoCapture(filename)
     # Check if camera opened successfully
     if not vidCapture.isOpened():
-        print("Error opening video  file")
+        print("Error opening video file!")
 
     width = int(vidCapture.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(vidCapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    if height > resolution:
+        print("video input resolution: " + str(height) + " is higher than output video " + str(resolution))
+        print("If you wish to maintain video quality use flag -r --resolution to increase output resolution.")
+        width = int(width*(resolution/height))
+        height = resolution
     length = int(vidCapture.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = int(vidCapture.get(cv2.CAP_PROP_FPS))
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
@@ -39,10 +44,12 @@ def enhance(filename: str, transitions: list, outfile:str):
 
     while vidCapture.isOpened():
         # Capture frame-by-frame
-        ret, frame = vidCapture.read()
+        ret, frame_full = vidCapture.read()
         if ret:
+            frame = cv2.resize(frame_full, (width, height))
             if transitions[i].draw_on_frame(frame, index):
-                i += 1
+                while transitions[i].start <= index:
+                    i += 1
             # this just copies the whole file to the ouput destination
             out.write(frame)
             index += 1
