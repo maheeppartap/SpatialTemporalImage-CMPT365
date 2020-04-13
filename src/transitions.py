@@ -152,10 +152,10 @@ class Cut(Transition):
         self.at = 0
         self.bt = 0
         self.ct = 0
-        self.a = 0
-        self.a2 = 0
-        self.b = 0
-        self.b2 = 0
+        self.major = 0
+        self.major2 = 0
+        self.minor = 0
+        self.minor2 = 0
         self.hw = 0
         self.hh = 0
         self.max_distance = 0
@@ -170,11 +170,11 @@ class Cut(Transition):
         tx = 0.707
         ty = 0.707
         for x in range(0, 3):
-            x = self.a * tx
-            y = self.b * ty
+            x = self.major * tx
+            y = self.minor * ty
 
-            ex = (self.a2 - self.b2) * tx ** 3 / self.a
-            ey = (self.b2 - self.a2) * ty ** 3 / self.b
+            ex = (self.major2 - self.minor2) * tx ** 3 / self.major
+            ey = (self.minor2 - self.major2) * ty ** 3 / self.minor
 
             rx = x - ex
             ry = y - ey
@@ -185,25 +185,25 @@ class Cut(Transition):
             r = math.hypot(ry, rx)
             q = math.hypot(qy, qx)
 
-            tx = min(1, max(0, (qx * r / q + ex) / self.a))
-            ty = min(1, max(0, (qy * r / q + ey) / self.b))
+            tx = min(1, max(0, (qx * r / q + ex) / self.major))
+            ty = min(1, max(0, (qy * r / q + ey) / self.minor))
             t = math.hypot(ty, tx)
             tx /= t
             ty /= t
 
-        tx = math.copysign(self.a * tx, cols)
-        ty = math.copysign(self.b * ty, rows)
+        tx = math.copysign(self.major * tx, cols)
+        ty = math.copysign(self.minor * ty, rows)
         return math.sqrt((tx-px)*(tx-px) + ((ty-py)*(ty-py)))
 
     def _set_ellipse_eqn(self, t):
-        self.b = self.at * (t * t) + self.bt * t + self.ct
-        self.a = self.b * Transition.vidspec.width / Transition.vidspec.height
-        self.a2 = self.a * self.a
-        self.b2 = self.b * self.b
+        self.minor = self.at * (t * t) + self.bt * t + self.ct
+        self.major = self.minor * Transition.vidspec.width / Transition.vidspec.height
+        self.major2 = self.major * self.major
+        self.minor2 = self.minor * self.minor
         self.max_distance = self._distance_to_ellipse(0, 0)
 
     def _blend_p(self, rows, cols):
-        if (cols - self.hw)*(cols-self.hw) / self.a2 + (rows-self.hh)*(rows-self.hh) / self.b2 < 1:
+        if (cols - self.hw)*(cols-self.hw) / self.major2 + (rows - self.hh)*(rows - self.hh) / self.minor2 < 1:
             return 0
         else:
             return self._distance_to_ellipse(rows, cols)/self.max_distance
@@ -252,7 +252,7 @@ class Cut(Transition):
 
 # Null transition to mark end of transitions
 class EmptyTrans(Transition):
-    def __init__(self, start=0, end=0):
+    def __init__(self, start=999999999999, end=999999999999):
         super().__init__(start, end)
 
     def draw_on_frame(self, frame, frame_ind) -> bool:
