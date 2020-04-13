@@ -22,7 +22,6 @@ def detect_transitions(colsti, rowsti, thresh = 40) -> list:
 # type = true for col, false for row
 def _detect_lines(sti, thresh) -> list:
     lines, height = _simple_line_detection(sti, thresh)
-    print(type(lines))
     if type(lines) is not list:
         return []
     groups = _first_pass_group(lines)
@@ -59,7 +58,6 @@ def _simple_line_detection(sti, thresh) -> (list,int):
                 cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
 
         lines_edges = cv2.addWeighted(img, 0.8, line_image, 1, 0)
-        cv2.imshow("ss", lines_edges)
         lines = lines.tolist()
         cv2.waitKey(0)
     except TypeError:
@@ -72,7 +70,6 @@ def _simple_line_detection(sti, thresh) -> (list,int):
 def _first_pass_group(lines) -> list:
     xInterceptTol = 20
     slopeTol = 1
-    print(lines[0][0][3])
     lines.sort(key=lambda x: (math.fabs(x[0][1] - x[0][3])))
     lines_ = np.copy(lines)
     groups = []
@@ -113,7 +110,6 @@ def _combine_lines(groups,sti) -> list:
 
 def _linear_regression_(groups) -> list:
     print("Running linear regression..")
-    print(groups)
     xlist = []
     ylist = []
     finalLine = []
@@ -132,7 +128,6 @@ def _linear_regression_(groups) -> list:
             xmax = max(xlist)
             xmin = min(xlist)
             coef = np.polyfit(x,y,1)
-            print("coeff is: ", coef)
             poly1d_fn = np.poly1d(coef)
             newL = [xmin, poly1d_fn(xmin), xmax, poly1d_fn(xmax)]
             finalLine.append(newL)
@@ -163,7 +158,6 @@ def _linear_regression_with_elemination_(groups, sti) -> list:
     deleted = True
 
     while deleted:
-        print("length is: ", len(xList))
         x = np.array(xList)
         y = np.array(yList)
         #   setup LR model
@@ -192,15 +186,12 @@ def deleteOutliers(slope, b, xlist, yList) -> (list, list, bool):
     distance.sort()
     q1 = float(np.quantile(distance, .25))
     q3 = float(np.quantile(distance, .75))
-    print("q1: ", q1, " q3: ", q3)
     iqr = float(q3 - q1)
-    print("iqr: ", iqr)
     maxDist = float(q3 + (1.5 * iqr))
     deleted = False
     i = 0
     k = []
     maxRemoveAllowed = 7
-    print("max dist is: ", maxDist)
     for x in distance:
         if x > maxDist:
             if len(k) > maxRemoveAllowed:
@@ -234,7 +225,6 @@ def _combine_lines_thresholded(groups) -> list:
 # remove any lines that appear to be false positives
 def _weed_false_positives(lines, height) -> list:
     threshConst = 0.8*height
-    print("print final lines", lines)
     Threshold = threshConst * height
     finalList = []
 
@@ -274,10 +264,8 @@ def _map_lines_to_transitions(lines, col) -> list:
                 continue
             x = float((line[3] - line[1]) / (line[2] - line[0]))
             b = float(line[1] - (x * line[0]))
-            print("lines are: ", line)
             intercept = int((-1 * b) / x)
             theta = math.atan(x)  # slope is tan(theta), so calculate theta and see if its positive or neg
-            print("Theta is", theta)
             if theta > 0:
                 if col:
                     transitionList.append(ColWipe(start=line[0], end=line[2], scol=0, ecol=1))
@@ -292,6 +280,5 @@ def _map_lines_to_transitions(lines, col) -> list:
     # self.listOfTransitions.append(tempTransition)
     except:
         return []
-    print("list of transitions: ", transitionList)
     return transitionList
 
