@@ -17,7 +17,7 @@ setup(
              'src/transitionDetector.py',
              'src/videoEnhancer.py',
              'src/transitions.py',
-             'src/videoAnalysis.py',
+             'src/randomColourGen.py',
              'src/videoBreakdown.py',
              'src/videoSpecs.py'
              ],
