@@ -8,10 +8,10 @@ from transitions import *
 
 
 # main function for command line
-def detect_transitions(colsti, rowsti) -> list:
+def detect_transitions(colsti, rowsti, thresh = 40) -> list:
     # detect the lines
-    col_lines = _detect_lines(colsti)
-    row_lines = _detect_lines(rowsti)
+    col_lines = _detect_lines(colsti, thresh)
+    row_lines = _detect_lines(rowsti, thresh)
     # classify them as transitions
     transitions = _map_lines_to_transitions(col_lines, True)
     transitions += _map_lines_to_transitions(row_lines, False)
@@ -20,8 +20,8 @@ def detect_transitions(colsti, rowsti) -> list:
 
 # detect high quality lines
 # type = true for col, false for row
-def _detect_lines(sti) -> list:
-    lines, height = _simple_line_detection(sti)
+def _detect_lines(sti, thresh) -> list:
+    lines, height = _simple_line_detection(sti, thresh)
     print(type(lines))
     if type(lines) is not list:
         return []
@@ -33,7 +33,7 @@ def _detect_lines(sti) -> list:
 
 
 # use openCV to find simple lines
-def _simple_line_detection(sti) -> (list,int):
+def _simple_line_detection(sti, thresh) -> (list,int):
     # I feel like there has to be a better way lol
     cv2.imwrite("temp.png", sti)  # doing this changes it to the correct format
     img = cv2.imread("temp.png")
@@ -46,7 +46,7 @@ def _simple_line_detection(sti) -> (list,int):
     edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
     rho = 1
     theta = np.pi / 180
-    threshold = 40
+    threshold = thresh
     min_line_length = float(0.7*height)
     max_line_gap = 20
     line_image = np.copy(img) * 0
