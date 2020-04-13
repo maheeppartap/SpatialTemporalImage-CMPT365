@@ -6,8 +6,7 @@ setup(
     description="Generates and analyzes STIs for videos and creates"
                 "a enhanced video.",
     author="Maheeppartap Singh""Conor Murphy",
-    packages=['src'
-               ],
+    packages=['src'],
     install_requires=[
         'opencv-python',
         'matplotlib',
@@ -21,7 +20,7 @@ setup(
              'src/videoBreakdown.py',
              'src/videoSpecs.py'
              ],
-    package_data={'src': ['../assets/colors.dat']},
+    package_data={'CLI': ['../assets/colors.dat']},
     entry_points={
       'console_scripts': [
           'TRANSformer = CLI:main'
