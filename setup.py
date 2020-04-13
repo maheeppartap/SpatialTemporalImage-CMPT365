@@ -24,7 +24,7 @@ setup(
 
     entry_points={
       'console_scripts': [
-          'enhanceMe = CLI:main'
+          'TRANSformer = CLI:main'
       ]
     }
 )
