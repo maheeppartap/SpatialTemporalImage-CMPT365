@@ -7,10 +7,11 @@ import cv2
 
 from transitions import *
 from videoSpecs import VideoSpecs
+from randomColourGen import *
 
 
 #: :type: list of Transition
-def enhance(filename: str, transitions: list, outfile: str, resolution=720):
+def enhance(filename: str, transitions: list, outfile: str, resolution=720, typeCol='n'):
     vidCapture = cv2.VideoCapture(filename)
     # Check if camera opened successfully
     if not vidCapture.isOpened():
@@ -21,7 +22,7 @@ def enhance(filename: str, transitions: list, outfile: str, resolution=720):
     if height > resolution:
         print("video input resolution: " + str(height) + " is higher than output video " + str(resolution))
         print("If you wish to maintain video quality use flag -r --resolution to increase output resolution.")
-        width = int(width*(resolution/height))
+        width = int(width * (resolution / height))
         height = resolution
     length = int(vidCapture.get(cv2.CAP_PROP_FRAME_COUNT))
     fps = int(vidCapture.get(cv2.CAP_PROP_FPS))
@@ -34,6 +35,11 @@ def enhance(filename: str, transitions: list, outfile: str, resolution=720):
     # for testing purposes
     i = 0
     index = 0
+    # adding colors to transitions
+
+    for trans in transitions:
+        r, g, b = color().retCol(typeCol)
+        trans.set_rgb(r, g, b)
     # make sure starts and ends are computed
     for trans in transitions:
         trans.compute_statics()
@@ -59,6 +65,3 @@ def enhance(filename: str, transitions: list, outfile: str, resolution=720):
     vidCapture.release()
     out.release()
     # just to be safe
-
-
-
