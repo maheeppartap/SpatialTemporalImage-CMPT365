@@ -1,6 +1,6 @@
 
 import random
-
+from fileRet import *
 # when asking for a random number set, specify type:
 #   'n' neon, 'p' pastel, 'v' vibrant, 'g' greyish,  'l' lyl
 # to add new colours to these pallettes, follow the format: [type as above] R G B
@@ -9,7 +9,7 @@ import random
 
 class color:
     def __init__(self):
-        with open('assets/colors.dat') as f:
+        with open(get_data('colors.dat')) as f:
             array = [[x for x in line.split()] for line in f]
 
         self.neon = []

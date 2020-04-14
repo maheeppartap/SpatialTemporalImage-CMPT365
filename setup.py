@@ -18,7 +18,8 @@ setup(
              'src/transitions.py',
              'src/randomColourGen.py',
              'src/videoBreakdown.py',
-             'src/videoSpecs.py'
+             'src/videoSpecs.py',
+             'src/fileRet.py'
              ],
     package_data={'CLI': ['../assets/colors.dat']},
     entry_points={
