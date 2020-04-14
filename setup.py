@@ -21,7 +21,7 @@ setup(
              'src/videoSpecs.py',
              'src/fileRet.py'
              ],
-    package_data={'CLI': ['data/*.dat']},
+    data_files=[('data', ['src/data/colors.dat'])],
     entry_points={
       'console_scripts': [
           'TRANSformer = CLI:main'
