@@ -53,7 +53,6 @@ def main():
     diff = time() - start
     if args.verbose:
         print("Completed in " + str(diff) + " seconds.")
-        print(str(len(transitions)) + " transitions detected.")
     if len(transitions) == 0:
         print("No transitions were detected!")
         print("This may mean that your video has no transitions, or that we did not detect them. Either way there is "
