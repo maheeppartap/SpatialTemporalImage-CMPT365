@@ -1,25 +1,25 @@
 # SpatialTemporalImage-CMPT365
 
-##General info
+## General info
 This is the submission of the final project for CMPT-365, and we call it TRANSformer. This software can
 tell what video transitions occur and at what time. 
 But we don't stop there, because that was too easy. The software now visually tells you where the transition
 is in the video itself. It highlights the transition in the video itself. Try it out for yourself.
 
-##Libraries
+## Libraries
 We used:
 * python v3.8
 * setuptools v40.8.0
 * numpy v1.18.1
 * openCV-python v4.2.0.32
 * matplotlib v3.2.0
-##To run
+## To run
 ```buildoutcfg
 $ cd [directory]
 $ python setup.py install
 $ TRANSformer [flags] [valid video file path]
 ```
-####Flags
+#### Flags
 * *-h*:  sends help. Exactly what I am doing here, just with more detail.
 * *-v*: enables verbose mode
 * *-o*: outputs the enhanced video and STIs to the directory directly followed.
